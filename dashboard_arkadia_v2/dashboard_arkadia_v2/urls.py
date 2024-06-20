@@ -21,6 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('funds_and_strategies.urls')),
     # path('users/', include('users.urls')),
-    # path('transactions/', include('transactions.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
