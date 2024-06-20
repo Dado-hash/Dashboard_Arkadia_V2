@@ -16,13 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from dashboard_arkadia_v2.views import index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('funds_and_strategies.urls')),
     # path('users/', include('users.urls')),
-    # path('funds_and_strategies/', include('funds_and_strategies.urls')),
     # path('transactions/', include('transactions.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
-    path('', index, name='index')
 ]
