@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'funds_and_strategies',
-    'transactions',
     'debug_toolbar',
 ]
 
