@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
-from cryptography.fernet import Fernet
-
-settings.SECRET_KEY = 'YOUR_SECRET_KEY_HERE' 
+from cryptography.fernet import Fernet 
 
 class Fund(models.Model):
     name = models.CharField(max_length=255)
@@ -39,10 +37,6 @@ class PerformanceMetric(models.Model):
     date = models.DateField()
     metric_name = models.CharField(max_length=255)
     value = models.DecimalField(max_digits=20, decimal_places=2)
-    version = models.IntegerField(default=1)
-
-    class Meta:
-        unique_together = ('asset', 'date', 'metric_name', 'version')
 
 class ExchangeAccount(models.Model):
     name = models.CharField(max_length=255)
