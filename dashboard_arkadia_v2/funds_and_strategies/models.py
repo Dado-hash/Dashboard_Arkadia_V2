@@ -20,12 +20,9 @@ class Asset(models.Model):
     date = models.DateField(auto_now_add=True)
 
 class Balance(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_balances')
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
-
-    class Meta:
-        unique_together = ('asset', 'date')
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
@@ -36,10 +33,9 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
-    fund = models.ForeignKey(Fund, null=True, blank=True, on_delete=models.SET_NULL)
 
 class PerformanceMetric(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     date = models.DateField()
     metric_name = models.CharField(max_length=255)
     value = models.DecimalField(max_digits=20, decimal_places=2)
@@ -52,7 +48,7 @@ class ExchangeAccount(models.Model):
     name = models.CharField(max_length=255)
     _api_key = models.BinaryField()  # Campo per memorizzare l'API key criptata
     _api_secret = models.BinaryField()  # Campo per memorizzare l'API secret criptata
-    fund = models.ForeignKey(Fund, on_delete=models.CASCADE)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     date_added = models.DateTimeField(auto_now_add=True)
 
     def _get_cipher(self):
