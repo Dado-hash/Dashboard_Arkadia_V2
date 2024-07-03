@@ -20,6 +20,7 @@ class Strategy(models.Model):
 class Asset(models.Model):
     name = models.CharField(max_length=255)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    exchange_account = models.ForeignKey('ExchangeAccount', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
@@ -76,4 +77,7 @@ class ExchangeAccount(models.Model):
     @api_secret.setter
     def api_secret(self, value):
         self._api_secret = self._get_cipher().encrypt(value.encode())
+
+    def __str__(self):
+        return self.name
 

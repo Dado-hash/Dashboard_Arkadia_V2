@@ -91,7 +91,7 @@ class ExchangeService:
     def save_assets_to_db(self, assets):
         today = date.today()
         # Elimina gli asset esistenti per lo stesso giorno
-        # Asset.objects.filter(strategy=self.exchange_account.strategy, date=today).delete()
+        Asset.objects.filter(strategy=self.exchange_account.strategy, date=today, exchange_account=self.exchange_account).delete()
         for asset in assets:
             Asset.objects.create(
                 name=asset['name'],
@@ -99,7 +99,8 @@ class ExchangeService:
                 price=asset['price'],
                 value_usd=asset['value_usd'],
                 strategy=self.exchange_account.strategy,
-                date=today
+                date=today,
+                exchange_account=self.exchange_account
             )
         # Aggiorna il campo last_updated
         self.exchange_account.last_updated = timezone.now()

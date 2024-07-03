@@ -11,7 +11,7 @@ class StrategyAdmin(admin.ModelAdmin):
     list_filter = ('fund',)
 
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'amount', 'value_usd', 'date')
+    list_display = ('name', 'strategy', 'exchange_account', 'amount', 'value_usd', 'date')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
