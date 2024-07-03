@@ -11,17 +11,17 @@ class StrategyAdmin(admin.ModelAdmin):
     list_filter = ('fund',)
 
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'balance', 'date')
+    list_display = ('name', 'strategy', 'amount', 'value_usd', 'date')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
 class BalanceAdmin(admin.ModelAdmin):
-    list_display = ('strategy', 'balance', 'date')
+    list_display = ('strategy', 'value_usd', 'date')
     search_fields = ('strategy__name',)
     list_filter = ('strategy', 'date')
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('type', 'amount', 'date', 'strategy')
+    list_display = ('type', 'asset', 'amount', 'value_usd', 'date', 'strategy')
     search_fields = ('type', 'strategy__name')
     list_filter = ('type', 'strategy')
 
@@ -35,7 +35,6 @@ class ExchangeAccountAdmin(admin.ModelAdmin):
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
-# Registra i modelli con le classi personalizzate
 admin.site.register(Fund, FundAdmin)
 admin.site.register(Strategy, StrategyAdmin)
 admin.site.register(Asset, AssetAdmin)

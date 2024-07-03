@@ -6,20 +6,28 @@ class Fund(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 class Strategy(models.Model):
     name = models.CharField(max_length=255)
     fund = models.ForeignKey(Fund, on_delete=models.CASCADE)
     description = models.TextField()
 
+    def __str__(self):
+        return self.name
+
 class Asset(models.Model):
     name = models.CharField(max_length=255)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=20, decimal_places=2)
+    amount = models.DecimalField(max_digits=20, decimal_places=2)
+    price = models.DecimalField(max_digits=20, decimal_places=2)
+    value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField(auto_now_add=True)
 
 class Balance(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=20, decimal_places=2)
+    value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
 
 class Transaction(models.Model):
@@ -28,7 +36,9 @@ class Transaction(models.Model):
         ('withdrawal', 'Withdrawal'),
     ]
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    asset = models.CharField(max_length=255) 
     amount = models.DecimalField(max_digits=20, decimal_places=2)
+    value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
 

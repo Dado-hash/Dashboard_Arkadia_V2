@@ -18,7 +18,7 @@ def save_fund(request):
             return JsonResponse({"status": "error", "message": "Invalid form data"})
     else:
         form = FundForm()
-    return render(request, 'save_fund.html', {'form': form})
+    return render(request, 'funds_and_strategies/save_fund.html', {'form': form})
 
 def save_strategy(request):
     if request.method == 'POST':
@@ -30,7 +30,7 @@ def save_strategy(request):
             return JsonResponse({"status": "error", "message": "Invalid form data"})
     else:
         form = StrategyForm()
-    return render(request, 'save_strategy.html', {'form': form})
+    return render(request, 'funds_and_strategies//save_strategy.html', {'form': form})
 
 def save_api_keys(request):
     if request.method == 'POST':
@@ -45,4 +45,4 @@ def save_api_keys(request):
             return JsonResponse({"status": "error", "message": "Invalid form data"})
     else:
         form = ExchangeAccountForm()
-    return render(request, 'save_api_keys.html', {'form': form})
+    return render(request, 'funds_and_strategies/save_api_keys.html', {'form': form})
