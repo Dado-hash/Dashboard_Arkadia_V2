@@ -1,6 +1,7 @@
 # services/exchange_service.py
 
-import logging
+import base64
+import urllib.parse
 import requests
 from datetime import date
 from funds_and_strategies.models import ExchangeAccount, Asset
@@ -12,6 +13,15 @@ import time
 from django.utils import timezone
 
 class ExchangeService:
+    KRAKEN_ASSET_MAPPING = {
+        'ZEUR': 'EUR',
+        'XXBT': 'BTC',
+        'XETH': 'ETH',
+        'USDT.F': 'USDT',
+        'USDC.F': 'USDC',
+        'XBT.F': 'BTC',
+    }
+
     def __init__(self, exchange_account: ExchangeAccount, prices: dict):
         self.api_key = exchange_account.api_key
         self.api_secret = exchange_account.api_secret
@@ -78,12 +88,50 @@ class ExchangeService:
         else:
             response.raise_for_status()
 
+    def _get_kraken_assets(self):
+        base_url = "https://api.kraken.com"
+        endpoint = "/0/private/Balance"
+        nonce = str(int(time.time() * 1000000))
+        post_data = {
+            'nonce': nonce
+        }
+        post_data_str = urllib.parse.urlencode(post_data)
+        message = endpoint.encode() + hashlib.sha256(nonce.encode() + post_data_str.encode()).digest()
+        signature = hmac.new(base64.b64decode(self.api_secret), message, hashlib.sha512)
+        headers = {
+            'API-Key': self.api_key,
+            'API-Sign': base64.b64encode(signature.digest()).decode()
+        }
+        response = requests.post(base_url + endpoint, headers=headers, data=post_data_str)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data['error']:
+                raise Exception(f"Kraken API error: {data['error']}")
+            balances = data['result']
+            assets = [
+                {
+                    "name": self.KRAKEN_ASSET_MAPPING.get(asset, asset),
+                    "amount": float(balance),
+                    "price": self.prices.get(f"{self.KRAKEN_ASSET_MAPPING.get(asset, asset)}USDT", 1.0),
+                    "value_usd": float(balance) * self.prices.get(f"{self.KRAKEN_ASSET_MAPPING.get(asset, asset)}USDT", 1.0),
+                    "date": date.today()
+                }
+                for asset, balance in balances.items()
+                if float(balance) > 0
+            ]
+            return assets
+        else:
+            response.raise_for_status()
+
     def get_assets(self):
         if self.exchange == 'binance' or self.exchange == 'binance_futures':
             if self.exchange == 'binance':
                 return self._get_binance_spot_assets()
             elif self.exchange == 'binance_futures':
                 return self._get_binance_futures_assets()
+        elif self.exchange == 'kraken':
+            return self._get_kraken_assets()
         # Implementare metodi simili per Kraken, Deribit e wallet Bitcoin/Ethereum
         else:
             raise ValueError("Unsupported exchange")
