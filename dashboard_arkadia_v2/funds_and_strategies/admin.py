@@ -35,6 +35,11 @@ class ExchangeAccountAdmin(admin.ModelAdmin):
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('name', 'strategy', 'address', ' network', 'description')
+    search_fields = ('name', 'strategy__name')
+    list_filter = ('strategy',)
+
 admin.site.register(Fund, FundAdmin)
 admin.site.register(Strategy, StrategyAdmin)
 admin.site.register(Asset, AssetAdmin)

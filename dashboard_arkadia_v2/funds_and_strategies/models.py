@@ -81,3 +81,9 @@ class ExchangeAccount(models.Model):
     def __str__(self):
         return self.name
 
+class Wallet(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    network = models.CharField(max_length=255)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    description = models.TextField()
