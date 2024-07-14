@@ -39,6 +39,7 @@ class Balance(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
+    modified_by_user = models.BooleanField(default=False)
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
