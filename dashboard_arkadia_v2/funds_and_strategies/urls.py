@@ -8,4 +8,5 @@ urlpatterns = [
     path('save-api-keys/', views.save_api_keys, name='save_api_keys'),
     path('update-assets/', views.update_assets, name='update_assets'),
     path('save-wallet/', views.save_wallet, name='save_wallet'),
+    path('add-assets/', views.add_assets, name='add_assets'),
 ]

@@ -26,13 +26,11 @@ class Asset(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
 
     def clean(self):
         if self.exchange_account and self.wallet:
             raise ValidationError('An asset cannot belong to both an exchange account and a wallet.')
-        if not self.exchange_account and not self.wallet:
-            raise ValidationError('An asset must belong to either an exchange account or a wallet.')
 
 class Balance(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
@@ -51,7 +49,7 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField()
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
 
 class PerformanceMetric(models.Model):

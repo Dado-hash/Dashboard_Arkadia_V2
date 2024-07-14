@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from django.contrib import messages
 
 from services.update_assets import update_all_assets
-from .models import ExchangeAccount
-from .forms import ExchangeAccountForm, FundForm, StrategyForm, WalletForm
+from .models import Asset, ExchangeAccount, Strategy, Wallet
+from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, WalletForm
 
 # Create your views here.
 
@@ -64,3 +65,25 @@ def update_assets(request):
         return JsonResponse({"status": "success"})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
+    
+def add_assets(request):
+    if request.method == 'POST':
+        formset = AssetFormSet(request.POST)
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.value_usd = instance.amount * instance.price
+                instance.save()
+            messages.success(request, 'Assets added successfully!')
+            return redirect('add_assets')
+    else:
+        formset = AssetFormSet(queryset=Asset.objects.none())
+
+    strategies = Strategy.objects.all()
+    exchange_accounts = ExchangeAccount.objects.all()
+    wallets = Wallet.objects.all()
+
+    return render(request, 'funds_and_strategies/add_assets.html', {
+        'formset': formset,
+        'strategies': strategies
+    })

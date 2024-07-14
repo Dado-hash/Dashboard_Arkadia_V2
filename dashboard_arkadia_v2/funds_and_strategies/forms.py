@@ -1,6 +1,7 @@
 # forms.py
 from django import forms
-from .models import ExchangeAccount, Fund, Strategy, Wallet
+from .models import Asset, ExchangeAccount, Fund, Strategy, Wallet
+from django.forms import modelformset_factory
 
 class FundForm(forms.ModelForm):
     class Meta:
@@ -51,3 +52,13 @@ class WalletForm(forms.ModelForm):
     class Meta:
         model = Wallet
         fields = ['name', 'strategy', 'address', 'network', 'description']
+
+class AssetForm(forms.ModelForm):
+    class Meta:
+        model = Asset
+        fields = ['name', 'strategy', 'amount', 'price', 'date']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+AssetFormSet = modelformset_factory(Asset, form=AssetForm, extra=1, can_delete=True)
