@@ -20,7 +20,7 @@ class ExchangeAccountForm(forms.ModelForm):
         ('kraken', 'Kraken'),
     ]
     
-    name = forms.ChoiceField(choices=EXCHANGE_CHOICES)
+    exchange = forms.ChoiceField(choices=EXCHANGE_CHOICES)
 
     api_key = forms.CharField(widget=forms.TextInput, label="API Key")
     api_secret = forms.CharField(widget=forms.PasswordInput, label="API Secret")

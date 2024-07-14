@@ -61,10 +61,10 @@ class PerformanceMetric(models.Model):
 
 class ExchangeAccount(models.Model):
     name = models.CharField(max_length=255)
+    exchange = models.CharField(max_length=255)
     _api_key = models.BinaryField()
     _api_secret = models.BinaryField()
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    date_added = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     description = models.TextField()
 
@@ -100,5 +100,4 @@ class Wallet(models.Model):
 
     def __str__(self):
         return self.name
-    
     

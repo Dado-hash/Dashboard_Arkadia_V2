@@ -19,7 +19,7 @@ class ExchangeService:
     def __init__(self, exchange_account: ExchangeAccount, prices: dict):
         self.api_key = exchange_account.api_key
         self.api_secret = exchange_account.api_secret
-        self.exchange = exchange_account.name.lower()
+        self.exchange = exchange_account.exchange.lower()
         self.prices = prices
         self.exchange_account = exchange_account
         

@@ -31,7 +31,7 @@ class PerformanceMetricAdmin(admin.ModelAdmin):
     list_filter = ('strategy', 'date', 'metric_name')
 
 class ExchangeAccountAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'date_added')
+    list_display = ('name', 'strategy', 'exchange')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
