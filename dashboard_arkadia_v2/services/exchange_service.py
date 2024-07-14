@@ -106,15 +106,16 @@ class ExchangeService:
         # Elimina gli asset esistenti per lo stesso giorno
         Asset.objects.filter(strategy=self.exchange_account.strategy, date=today, exchange_account=self.exchange_account).delete()
         for asset in assets:
-            Asset.objects.create(
-                name=asset['name'],
-                amount=asset['amount'],
-                price=asset['price'],
-                value_usd=asset['value_usd'],
-                strategy=self.exchange_account.strategy,
-                date=today,
-                exchange_account=self.exchange_account
-            )
+            if asset['value_usd'] > 0:
+                Asset.objects.create(
+                    name=asset['name'],
+                    amount=asset['amount'],
+                    price=asset['price'],
+                    value_usd=asset['value_usd'],
+                    strategy=self.exchange_account.strategy,
+                    date=today,
+                    exchange_account=self.exchange_account
+                )
         # Aggiorna il campo last_updated
         self.exchange_account.last_updated = timezone.now()
         self.exchange_account.save()

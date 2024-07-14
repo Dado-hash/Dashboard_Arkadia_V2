@@ -1,3 +1,4 @@
+from .balance_service import update_all_balances
 from funds_and_strategies.models import ExchangeAccount, Wallet
 from .price_service import PriceService
 from .exchange_service import ExchangeService
@@ -15,8 +16,11 @@ def update_all_assets():
         assets = exchange_service.get_assets()
         exchange_service.save_assets_to_db(assets)
 
-    # Aggiorna i bilanci dei wallets
+    # Aggiorna gli asset dei wallets
     wallets = Wallet.objects.all()
     for wallet in wallets:
         wallet_service = WalletService(wallet, prices)
         wallet_service.save_assets_to_db()
+
+    # Aggiorna i bilanci per tutte le strategie
+    update_all_balances()

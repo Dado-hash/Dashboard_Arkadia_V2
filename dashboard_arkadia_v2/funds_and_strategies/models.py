@@ -34,7 +34,7 @@ class Asset(models.Model):
 
 class Balance(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    value_usd = models.DecimalField(max_digits=20, decimal_places=2)
+    value_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
     modified_by_user = models.BooleanField(default=False)
