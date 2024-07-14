@@ -3,7 +3,7 @@ from django.http import JsonResponse
 
 from services.update_assets import update_all_assets
 from .models import ExchangeAccount
-from .forms import ExchangeAccountForm, FundForm, StrategyForm
+from .forms import ExchangeAccountForm, FundForm, StrategyForm, WalletForm
 
 # Create your views here.
 
@@ -45,6 +45,18 @@ def save_api_keys(request):
     else:
         form = ExchangeAccountForm()
     return render(request, 'funds_and_strategies/save_api_keys.html', {'form': form})
+
+def save_wallet(request):
+    if request.method == 'POST':
+        form = WalletForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"status": "success", "message": "Wallet saved successfully"})
+        else:
+            return JsonResponse({"status": "error", "message": "Invalid form data"})
+    else:
+        form = WalletForm()
+    return render(request, 'funds_and_strategies/save_wallet.html', {'form': form})
 
 def update_assets(request):
     try:

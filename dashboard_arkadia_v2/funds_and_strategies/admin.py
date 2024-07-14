@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Fund, Strategy, Asset, Balance, Transaction, PerformanceMetric, ExchangeAccount
+from .models import Fund, Strategy, Asset, Balance, Transaction, PerformanceMetric, ExchangeAccount, Wallet
 
 class FundAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
@@ -36,7 +36,7 @@ class ExchangeAccountAdmin(admin.ModelAdmin):
     list_filter = ('strategy',)
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'address', ' network', 'description')
+    list_display = ('name', 'strategy', 'address', 'network', 'description')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
@@ -47,3 +47,4 @@ admin.site.register(Balance, BalanceAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(PerformanceMetric, PerformanceMetricAdmin)
 admin.site.register(ExchangeAccount, ExchangeAccountAdmin)
+admin.site.register(Wallet, WalletAdmin)

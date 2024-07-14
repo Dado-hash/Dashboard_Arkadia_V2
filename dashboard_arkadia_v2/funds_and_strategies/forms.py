@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import ExchangeAccount, Fund, Strategy
+from .models import ExchangeAccount, Fund, Strategy, Wallet
 
 class FundForm(forms.ModelForm):
     class Meta:
@@ -36,3 +36,18 @@ class ExchangeAccountForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+class WalletForm(forms.ModelForm):
+    NETWORK_CHOICES = [
+        ('bitcoin', 'Bitcoin'),
+        ('ethereum', 'Ethereum'),
+    ]
+
+    name = forms.CharField(widget=forms.TextInput, label="Wallet Name")
+
+    address = forms.CharField(widget=forms.TextInput, label="Address")
+    network = forms.ChoiceField(choices=NETWORK_CHOICES, label="Network")
+
+    class Meta:
+        model = Wallet
+        fields = ['name', 'strategy', 'address', 'network', 'description']

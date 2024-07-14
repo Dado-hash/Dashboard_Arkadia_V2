@@ -40,6 +40,7 @@ class Transaction(models.Model):
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     asset = models.CharField(max_length=255) 
     amount = models.DecimalField(max_digits=20, decimal_places=2)
+    price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
