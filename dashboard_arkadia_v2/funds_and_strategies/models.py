@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
-from cryptography.fernet import Fernet 
+from cryptography.fernet import Fernet
+from django.forms import ValidationError 
 
 class Fund(models.Model):
     name = models.CharField(max_length=255)
@@ -20,11 +21,18 @@ class Strategy(models.Model):
 class Asset(models.Model):
     name = models.CharField(max_length=255)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
-    exchange_account = models.ForeignKey('ExchangeAccount', on_delete=models.CASCADE)
+    exchange_account = models.ForeignKey('ExchangeAccount', null=True, blank=True, on_delete=models.CASCADE)
+    wallet = models.ForeignKey('Wallet', null=True, blank=True, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField(auto_now_add=True)
+
+    def clean(self):
+        if self.exchange_account and self.wallet:
+            raise ValidationError('An asset cannot belong to both an exchange account and a wallet.')
+        if not self.exchange_account and not self.wallet:
+            raise ValidationError('An asset must belong to either an exchange account or a wallet.')
 
 class Balance(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
@@ -88,3 +96,9 @@ class Wallet(models.Model):
     network = models.CharField(max_length=255)
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     description = models.TextField()
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+    
+    

@@ -11,7 +11,7 @@ class StrategyAdmin(admin.ModelAdmin):
     list_filter = ('fund',)
 
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'exchange_account', 'amount', 'value_usd', 'date')
+    list_display = ('name', 'strategy', 'exchange_account', 'wallet', 'amount', 'value_usd', 'date')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 
@@ -36,7 +36,7 @@ class ExchangeAccountAdmin(admin.ModelAdmin):
     list_filter = ('strategy',)
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'address', 'network', 'description')
+    list_display = ('name', 'strategy', 'address', 'network', 'description', 'last_updated')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy',)
 

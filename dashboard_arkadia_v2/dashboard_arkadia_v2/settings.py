@@ -100,6 +100,8 @@ DATABASES = {
 
 SECRET_KEY = env('SECRET_KEY')
 
+ETHERSCAN_API_KEY = env('ETHERSCAN_API_KEY')
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
