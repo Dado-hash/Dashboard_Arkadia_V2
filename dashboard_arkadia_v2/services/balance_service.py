@@ -14,19 +14,21 @@ class BalanceService:
             # Calculate the total value in USD of all assets for the given strategy and date
             total_value_usd = Asset.objects.filter(strategy=strategy, date=balance_date).aggregate(total_value=Sum('value_usd'))['total_value'] or 0.0
             
-            # Check if a balance entry already exists for the given date
-            balance, created = Balance.objects.get_or_create(strategy=strategy, date=balance_date)
-            
             # Ensure that total_value_usd is a float and not None
             if total_value_usd is None:
                 total_value_usd = 0.0
 
-            # Assign the calculated value to the balance object
-            balance.value_usd = total_value_usd
-            balance.last_updated = timezone.now()
-
+            # Create a new balance entry for the given date
+            balance = Balance(
+                strategy=strategy,
+                date=balance_date,
+                value_usd=total_value_usd,
+                last_updated=timezone.now()
+            )
+            
             # Save the balance object to the database
             balance.save()
+            logger.info(f"Saved balance for {strategy.name} on {balance_date} with value {total_value_usd}.")
             return balance
         except Exception as e:
             logger.error(f"Error calculating balance for {strategy.name} on {balance_date}: {e}")
@@ -42,6 +44,10 @@ class BalanceService:
 
     def update_all_balances(self):
         try:
+            # Delete all existing balances
+            Balance.objects.all().delete()
+            logger.info("Deleted all existing balances.")
+            
             # Get all strategies
             strategies = Strategy.objects.all()
             for strategy in strategies:
