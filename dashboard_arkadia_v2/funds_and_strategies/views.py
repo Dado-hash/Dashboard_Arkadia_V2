@@ -3,8 +3,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 
 from services.update_assets import update_all_assets
-from .models import Asset, ExchangeAccount, Strategy, Wallet
-from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, WalletForm
+from .models import Asset, ExchangeAccount, Strategy, Transaction, Wallet
+from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, TransactionFormSet, WalletForm
 
 # Create your views here.
 
@@ -80,10 +80,28 @@ def add_assets(request):
         formset = AssetFormSet(queryset=Asset.objects.none())
 
     strategies = Strategy.objects.all()
-    exchange_accounts = ExchangeAccount.objects.all()
-    wallets = Wallet.objects.all()
 
     return render(request, 'funds_and_strategies/add_assets.html', {
+        'formset': formset,
+        'strategies': strategies
+    })
+
+def add_transactions(request):
+    if request.method == 'POST':
+        formset = TransactionFormSet(request.POST)
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.value_usd = instance.amount * instance.price
+                instance.save()
+            messages.success(request, 'Transactions added successfully!')
+            return redirect('add_transactions')
+    else:
+        formset = TransactionFormSet(queryset=Transaction.objects.none())
+
+    strategies = Strategy.objects.all()
+
+    return render(request, 'funds_and_strategies/add_transactions.html', {
         'formset': formset,
         'strategies': strategies
     })

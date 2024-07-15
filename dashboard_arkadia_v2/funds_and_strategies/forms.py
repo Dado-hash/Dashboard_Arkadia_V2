@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Asset, ExchangeAccount, Fund, Strategy, Wallet
+from .models import Asset, ExchangeAccount, Fund, Strategy, Transaction, Wallet
 from django.forms import modelformset_factory
 
 class FundForm(forms.ModelForm):
@@ -11,7 +11,7 @@ class FundForm(forms.ModelForm):
 class StrategyForm(forms.ModelForm):
     class Meta:
         model = Strategy
-        fields = ['name', 'fund', 'description']
+        fields = ['name', 'fund', 'manual', 'description']
 
 class ExchangeAccountForm(forms.ModelForm):
     EXCHANGE_CHOICES = [
@@ -62,3 +62,20 @@ class AssetForm(forms.ModelForm):
         }
 
 AssetFormSet = modelformset_factory(Asset, form=AssetForm, extra=1, can_delete=True)
+
+class TransactionForm(forms.ModelForm):
+    TRANSACTION_TYPES = [
+        ('deposit', 'Deposit'),
+        ('withdrawal', 'Withdrawal'),
+    ]
+
+    type = forms.ChoiceField(choices=TRANSACTION_TYPES)
+
+    class Meta:
+        model = Transaction
+        fields = ['type', 'asset', 'amount', 'price', 'date', 'strategy']
+        widgtes = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+TransactionFormSet = modelformset_factory(Transaction, form=TransactionForm, extra=1, can_delete=True)
