@@ -30,16 +30,8 @@
             var formTemplate = `
                 <div class="asset-form">
                     <div>
-                        <label for="id_form-__prefix__-name">Name:</label>
+                        <label for="id_form-__prefix__-name">Ticker:</label>
                         <input type="text" name="form-__prefix__-name" maxlength="255" required id="id_form-__prefix__-name">
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-strategy">Strategy:</label>
-                        <select name="form-__prefix__-strategy" required id="id_form-__prefix__-strategy">
-                            {% for strategy in strategies %}
-                                <option value="{{ strategy.id }}">{{ strategy.name }}</option>
-                            {% endfor %}
-                        </select>
                     </div>
                     <div>
                         <label for="id_form-__prefix__-amount">Amount:</label>
@@ -52,6 +44,14 @@
                     <div>
                         <label for="id_form-__prefix__-date">Date:</label>
                         <input type="date" name="form-__prefix__-date" required id="id_form-__prefix__-date">
+                    </div>
+                    <div>
+                        <label for="id_form-__prefix__-strategy">Strategy:</label>
+                        <select name="form-__prefix__-strategy" required id="id_form-__prefix__-strategy">
+                            {% for strategy in strategies %}
+                                <option value="{{ strategy.id }}">{{ strategy.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <button type="button" class="remove-form">Remove</button>
                 </div>
