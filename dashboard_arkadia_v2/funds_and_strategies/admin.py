@@ -6,7 +6,7 @@ class FundAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 class StrategyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'fund', 'description')
+    list_display = ('name', 'fund', 'manual', 'description')
     search_fields = ('name', 'fund__name')
     list_filter = ('fund',)
 

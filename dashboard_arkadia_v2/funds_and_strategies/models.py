@@ -14,6 +14,7 @@ class Strategy(models.Model):
     name = models.CharField(max_length=255)
     fund = models.ForeignKey(Fund, on_delete=models.CASCADE)
     description = models.TextField()
+    manual = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -37,7 +38,6 @@ class Balance(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
-    modified_by_user = models.BooleanField(default=False)
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
@@ -49,7 +49,7 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
-    date = models.DateTimeField()
+    date = models.DateField()
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
 
 class PerformanceMetric(models.Model):
