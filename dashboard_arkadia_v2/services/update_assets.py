@@ -1,4 +1,5 @@
 from .balance_service import update_all_balances
+from .metric_service import update_all_performances
 from funds_and_strategies.models import ExchangeAccount, Wallet
 from .price_service import PriceService
 from .exchange_service import ExchangeService
@@ -24,3 +25,6 @@ def update_all_assets():
 
     # Aggiorna i bilanci per tutte le strategie
     update_all_balances()
+
+    # Aggiorna le metriche di performance per tutte le strategie
+    update_all_performances()
