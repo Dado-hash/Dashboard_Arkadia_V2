@@ -29,6 +29,9 @@ class Asset(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
 
+    class Meta:
+        ordering = ['date']
+
     def clean(self):
         if self.exchange_account and self.wallet:
             raise ValidationError('An asset cannot belong to both an exchange account and a wallet.')
@@ -38,6 +41,9 @@ class Balance(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
@@ -52,6 +58,9 @@ class Transaction(models.Model):
     date = models.DateField()
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        ordering = ['date']
+
 class PerformanceMetric(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
     date = models.DateField()
@@ -60,6 +69,9 @@ class PerformanceMetric(models.Model):
 
     def __str__(self):
         return f"{self.strategy.name} - {self.metric_name} - {self.date}"
+    
+    class Meta:
+        ordering = ['date']
 
 class ExchangeAccount(models.Model):
     name = models.CharField(max_length=255)
