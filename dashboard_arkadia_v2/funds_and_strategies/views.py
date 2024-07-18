@@ -8,8 +8,8 @@ from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, Tr
 
 # Create your views here.
 
-def index(request):
-    return render(request, 'funds_and_strategies/index.html')
+def dashboard_view(request):
+    return render(request, 'funds_and_strategies/dashboard.html')
 
 def save_fund(request):
     if request.method == 'POST':
