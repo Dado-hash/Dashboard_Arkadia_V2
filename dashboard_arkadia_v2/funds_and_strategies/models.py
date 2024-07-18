@@ -37,7 +37,8 @@ class Asset(models.Model):
             raise ValidationError('An asset cannot belong to both an exchange account and a wallet.')
 
 class Balance(models.Model):
-    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE, null=True, blank=True)
+    fund = models.ForeignKey(Fund, on_delete=models.CASCADE, null=True, blank=True)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
@@ -62,14 +63,19 @@ class Transaction(models.Model):
         ordering = ['date']
 
 class PerformanceMetric(models.Model):
-    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)
+    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE, null=True, blank=True)
+    fund = models.ForeignKey(Fund, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField()
     metric_name = models.CharField(max_length=255)
     value = models.DecimalField(max_digits=20, decimal_places=2)
 
     def __str__(self):
-        return f"{self.strategy.name} - {self.metric_name} - {self.date}"
-    
+        return f"{self.strategy.name if self.strategy else self.fund.name} - {self.metric_name} - {self.date}"
+
+    @property
+    def strategy_or_fund(self):
+        return self.strategy.name if self.strategy else self.fund.name
+
     class Meta:
         ordering = ['date']
 
