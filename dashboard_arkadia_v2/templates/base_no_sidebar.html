@@ -14,14 +14,6 @@
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        .centered-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-    </style>
 </head>
 <body>
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
@@ -45,7 +37,7 @@
             <input class="form-control w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search">
         </div>
     </header>
-    <div class="container-fluid centered-container">
+    <div>
         <main>
             {% block content %}
             {% endblock %}
