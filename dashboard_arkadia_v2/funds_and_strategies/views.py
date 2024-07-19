@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
+import json
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
+import requests
 
 from services.update_assets import update_all_assets
 from .models import Asset, ExchangeAccount, Strategy, Transaction, Wallet
@@ -8,8 +11,33 @@ from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, Tr
 
 # Create your views here.
 
+def get_bitcoin_data():
+    # Calcola le date per l'ultimo anno
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365)
+
+    # Convertili in timestamp UNIX
+    end_date_unix = int(end_date.timestamp())
+    start_date_unix = int(start_date.timestamp())
+
+    # URL dell'API CoinGecko
+    url = f'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from={start_date_unix}&to={end_date_unix}'
+    
+    response = requests.get(url)
+    data = response.json()
+    prices = data['prices']
+    labels = [datetime.fromtimestamp(item[0] / 1000).strftime('%Y-%m-%d') for item in prices]
+    prices = [item[1] for item in prices]
+    
+    return labels, prices
+
 def dashboard_view(request):
-    return render(request, 'funds_and_strategies/dashboard.html')
+    labels, data = get_bitcoin_data()
+    context = {
+        'labels': json.dumps(labels),
+        'data': json.dumps(data)
+    }
+    return render(request, 'funds_and_strategies/dashboard.html', context)
 
 def settings(request):
     return render(request, 'funds_and_strategies/settings.html')
