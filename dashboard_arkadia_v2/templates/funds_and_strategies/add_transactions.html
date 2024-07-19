@@ -1,80 +1,88 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Transactions</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <h1>Add Transactions</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ formset.management_form }}
-        <div id="formset-container">
-            {% for form in formset %}
-                <div class="transaction-form">
-                    {{ form.as_p }}
-                    <button type="button" class="remove-form">Remove</button>
+<!-- templates/add_transactions.html -->
+{% extends 'base.html' %}
+
+{% block title %}Add Transactions{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="text-center">Add Transactions</h2>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                <div id="formset-container">
+                    {% for form in formset %}
+                        <div class="transaction-form mb-3 p-3 border rounded">
+                            {{ form.as_p }}
+                            <button type="button" class="btn btn-danger remove-form">Remove</button>
+                        </div>
+                    {% endfor %}
                 </div>
+                <div class="d-grid gap-2 mt-3">
+                    <button type="button" id="add-form" class="btn btn-success">Add Transaction</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+            {% for message in messages %}
+                <div class="alert alert-info mt-3">{{ message }}</div>
             {% endfor %}
         </div>
-        <button type="button" id="add-form">Add Transaction</button>
-        <button type="submit">Save</button>
-    </form>
-    {% for message in messages %}
-        <p>{{ message }}</p>
-    {% endfor %}
-    <script>
-        $(document).ready(function() {
-            var formsetContainer = $('#formset-container');
-            var formsetTotalForms = $('#id_form-TOTAL_FORMS');
-            var formTemplate = `
-                <div class="transaction-form">
-                    <div>
-                        <label for="id_form-__prefix__-type">Type:</label>
-                        <select name="form-__prefix__-type" required id="id_form-__prefix__-type">
-                            <option value="deposit">Deposit</option>
-                            <option value="withdrawal">Withdrawal</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-asset">Ticker:</label>
-                        <input type="text" name="form-__prefix__-asset" maxlength="255" required id="id_form-__prefix__-asset">
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-amount">Amount:</label>
-                        <input type="number" name="form-__prefix__-amount" step="0.01" required id="id_form-__prefix__-amount">
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-price">Price:</label>
-                        <input type="number" name="form-__prefix__-price" step="0.01" required id="id_form-__prefix__-price">
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-date">Date:</label>
-                        <input type="date" name="form-__prefix__-date" required id="id_form-__prefix__-date">
-                    </div>
-                    <div>
-                        <label for="id_form-__prefix__-strategy">Strategy:</label>
-                        <select name="form-__prefix__-strategy" required id="id_form-__prefix__-strategy">
-                            {% for strategy in strategies %}
-                                <option value="{{ strategy.id }}">{{ strategy.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="button" class="remove-form">Remove</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var formsetContainer = $('#formset-container');
+        var formsetTotalForms = $('#id_form-TOTAL_FORMS');
+        var formTemplate = `
+            <div class="transaction-form mb-3 p-3 border rounded">
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-type">Type:</label>
+                    <select name="form-__prefix__-type" required class="form-select" id="id_form-__prefix__-type">
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                    </select>
                 </div>
-            `;
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-asset">Ticker:</label>
+                    <input type="text" name="form-__prefix__-asset" maxlength="255" required class="form-control" id="id_form-__prefix__-asset">
+                </div>
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-amount">Amount:</label>
+                    <input type="number" name="form-__prefix__-amount" step="0.01" required class="form-control" id="id_form-__prefix__-amount">
+                </div>
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-price">Price:</label>
+                    <input type="number" name="form-__prefix__-price" step="0.01" required class="form-control" id="id_form-__prefix__-price">
+                </div>
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-date">Date:</label>
+                    <input type="date" name="form-__prefix__-date" required class="form-control" id="id_form-__prefix__-date">
+                </div>
+                <div class="mb-3">
+                    <label for="id_form-__prefix__-strategy">Strategy:</label>
+                    <select name="form-__prefix__-strategy" required class="form-select" id="id_form-__prefix__-strategy">
+                        {% for strategy in strategies %}
+                            <option value="{{ strategy.id }}">{{ strategy.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="button" class="btn btn-danger remove-form">Remove</button>
+            </div>
+        `;
 
-            $('#add-form').click(function() {
-                var newForm = $(formTemplate.replace(/__prefix__/g, formsetTotalForms.val()));
-                formsetTotalForms.val(parseInt(formsetTotalForms.val()) + 1);
-                formsetContainer.append(newForm);
-            });
-
-            formsetContainer.on('click', '.remove-form', function() {
-                $(this).closest('.transaction-form').remove();
-                formsetTotalForms.val(parseInt(formsetTotalForms.val()) - 1);
-            });
+        $('#add-form').click(function() {
+            var newForm = $(formTemplate.replace(/__prefix__/g, formsetTotalForms.val()));
+            formsetTotalForms.val(parseInt(formsetTotalForms.val()) + 1);
+            formsetContainer.append(newForm);
         });
-    </script>
-</body>
-</html>
+
+        formsetContainer.on('click', '.remove-form', function() {
+            $(this).closest('.transaction-form').remove();
+            formsetTotalForms.val(parseInt(formsetTotalForms.val()) - 1);
+        });
+    });
+</script>
+{% endblock %}

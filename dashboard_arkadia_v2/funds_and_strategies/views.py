@@ -11,6 +11,9 @@ from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, Tr
 def dashboard_view(request):
     return render(request, 'funds_and_strategies/dashboard.html')
 
+def settings(request):
+    return render(request, 'funds_and_strategies/settings.html')
+
 def save_fund(request):
     if request.method == 'POST':
         form = FundForm(request.POST)

@@ -1,14 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Save Wallet</title>
-</head>
-<body>
-    <h1>Save Wallet</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save</button>
-    </form>
-</body>
-</html>
+<!-- templates/save_wallet.html -->
+{% extends 'base.html' %}
+
+{% block title %}Save Wallet{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="text-center">Save Wallet</h2>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger">
+                            {{ form.name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.address.label_tag }}
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <div class="text-danger">
+                            {{ form.address.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.balance.label_tag }}
+                    {{ form.balance }}
+                    {% if form.balance.errors %}
+                        <div class="text-danger">
+                            {{ form.balance.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

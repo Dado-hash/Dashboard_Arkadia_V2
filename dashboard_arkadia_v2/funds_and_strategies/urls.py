@@ -10,5 +10,5 @@ urlpatterns = [
     path('save-wallet/', views.save_wallet, name='save_wallet'),
     path('add-assets/', views.add_assets, name='add_assets'),
     path('add-transactions/', views.add_transactions, name='add_transactions'),
-
+    path('settings/', views.settings, name='settings'),
 ]
