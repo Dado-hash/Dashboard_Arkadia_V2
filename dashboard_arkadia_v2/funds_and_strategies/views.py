@@ -92,8 +92,33 @@ def save_wallet(request):
 
 def update_assets(request):
     try:
-        update_all_assets()
-        return JsonResponse({"status": "success"})
+        update_all_assets()  # La tua funzione per aggiornare gli asset
+
+        # Recupera i dati aggiornati
+        funds = Fund.objects.all()
+        funds_data = []
+
+        for fund in funds:
+            balance_data = Balance.objects.filter(fund=fund).order_by('date')
+            daily_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='daily_performance').order_by('date')
+            monthly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='monthly_performance').order_by('date')
+            cumulative_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='cumulative_performance').order_by('date')
+
+            fund_data = {
+                'id': fund.id,
+                'name': fund.name,
+                'balance_labels': [item.date.strftime('%Y-%m-%d') for item in balance_data],
+                'balance_values': [float(item.value_usd) for item in balance_data],
+                'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
+                'daily_values': [float(item.value) for item in daily_performance_data],
+                'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
+                'monthly_values': [float(item.value) for item in monthly_performance_data],
+                'cumulative_labels': [item.date.strftime('%Y-%m') for item in cumulative_performance_data],
+                'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+            }
+            funds_data.append(fund_data)
+
+        return JsonResponse({"status": "success", "funds_data": funds_data})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
     

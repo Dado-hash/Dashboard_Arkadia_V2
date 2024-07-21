@@ -7,7 +7,13 @@
     
     <!-- Selettori del Fondo e della Metrica -->
     <div class="row mt-4">
-        <div class="col-md-3 offset-md-3">
+        <div class="col-md-3 d-flex justify-content-center align-items-center" style="height: 100px;">
+            <button id="updateAssets" class="btn btn-primary">
+                <span id="updateAssetsText">Update Assets</span>
+                <span id="updateAssetsSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+        </div>
+        <div class="col-md-3">
             <label for="fundSelector" class="form-label">Select Fund:</label>
             <select id="fundSelector" class="form-select mb-3">
                 {% for fund in funds %}
@@ -48,6 +54,9 @@
         var metricSelector = document.getElementById('metricSelector');
         var fundChartCtx = document.getElementById('fundChart').getContext('2d');
         var fundChart;
+        var updateButton = document.getElementById('updateAssets');
+        var updateButtonText = document.getElementById('updateAssetsText');
+        var updateButtonSpinner = document.getElementById('updateAssetsSpinner');
 
         function updateChart(fundId, metric) {
             var fund = funds.find(f => f.id === parseInt(fundId));
@@ -139,6 +148,43 @@
             } else {
                 alert('Please select a fund first.');
             }
+        });
+
+        // Update balances on button click
+        updateButton.addEventListener('click', function() {
+            updateButton.disabled = true;  // Disable the button
+            updateButtonText.textContent = 'Updating...';  // Change the button text
+            updateButtonSpinner.classList.remove('d-none');  // Show the spinner
+
+            fetch('{% url "update_assets" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Include CSRF token for security
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateButton.disabled = false;  // Enable the button
+                updateButtonText.textContent = 'Update Assets';  // Restore the button text
+                updateButtonSpinner.classList.add('d-none');  // Hide the spinner
+
+                if (data.status === 'success') {
+                    funds = data.funds_data; // Update funds data with the new data from the server
+                    updateChart(fundSelector.value, metricSelector.value); // Update the chart
+                } else {
+                    alert('Failed to update balances: ' + data.message);
+                }
+            })
+            .catch(error => {
+                updateButton.disabled = false;  // Enable the button
+                updateButtonText.textContent = 'Update Assets';  // Restore the button text
+                updateButtonSpinner.classList.add('d-none');  // Hide the spinner
+
+                console.error('Error:', error);
+                alert('An error occurred while updating balances.');
+            });
         });
     });
 </script>
