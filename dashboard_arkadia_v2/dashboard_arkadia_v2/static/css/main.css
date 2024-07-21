@@ -79,3 +79,9 @@
 .mt-custom {
   margin-top: 10rem; 
 }
+
+.chart-container {
+  position: relative;
+  height: 50vh; /* Altezza del grafico, puoi regolarla secondo le tue necessità */
+  width: 100%; /* Larghezza del grafico */
+}

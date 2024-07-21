@@ -3,19 +3,21 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-2">
     <h2 class="text-center">Dashboard</h2>
     <p class="text-center">Welcome to the Arkadia Dashboard!</p>
     
     <!-- Area del grafico -->
     <div class="row justify-content-center mt-5">
-        <div class="col-md-8">
-            <canvas id="bitcoinChart"></canvas>
+        <div class="col-md-10"> <!-- Aumenta la larghezza -->
+            <div class="chart-container" style="position: relative; height:70vh; width:100%"> <!-- Aggiungi uno stile inline per altezza -->
+                <canvas id="bitcoinChart"></canvas>
+            </div>
         </div>
     </div>
 
     <!-- Citation -->
-    <div class="row justify-content-center mt-3">
+    <div class="row justify-content-center">
         <div class="col-md-8 text-center">
             <p><em>"It might make sense just to get some in case it catches on." - Satoshi Nakamoto</em></p>
         </div>
