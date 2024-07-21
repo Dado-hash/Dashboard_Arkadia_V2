@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Funds{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- Selettori del Fondo e della Metrica -->
+    <div class="row mt-4">
+        <div class="col-md-3 offset-md-3">
+            <label for="fundSelector" class="form-label">Select Fund:</label>
+            <select id="fundSelector" class="form-select mb-3">
+                {% for fund in funds %}
+                    <option value="{{ fund.id }}">{{ fund.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="metricSelector" class="form-label">Select Metric:</label>
+            <select id="metricSelector" class="form-select mb-3">
+                <option value="balance">Balance</option>
+                <option value="daily_performance">Daily Performance</option>
+                <option value="monthly_performance">Monthly Performance</option>
+                <option value="cumulative_performance">Cumulative Performance</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex justify-content-center align-items-center" style="height: 100px;">
+            <a id="goToStrategies" class="btn btn-primary">Go to Strategies</a>
+        </div>
+    </div>
+
+    <!-- Grafico -->
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <canvas id="fundChart"></canvas>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.2/dist/chart.umd.js" integrity="sha384-eI7PSr3L1XLISH8JdDII5YN/njoSsxfbrkCTnJrzXt+ENP5MOVBxD+l6sEG4zoLp" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var funds = JSON.parse('{{ funds_data|escapejs }}');
+        var fundSelector = document.getElementById('fundSelector');
+        var metricSelector = document.getElementById('metricSelector');
+        var fundChartCtx = document.getElementById('fundChart').getContext('2d');
+        var fundChart;
+
+        function updateChart(fundId, metric) {
+            var fund = funds.find(f => f.id === parseInt(fundId));
+            if (fund) {
+                var labels = [];
+                var data = [];
+                var label = '';
+                var chartType = 'line';
+
+                if (metric === 'balance') {
+                    labels = fund.balance_labels;
+                    data = fund.balance_values;
+                    label = fund.name + ' Balance (USD)';
+                } else if (metric === 'daily_performance') {
+                    labels = fund.daily_labels;
+                    data = fund.daily_values;
+                    label = fund.name + ' Daily Performance (%)';
+                    chartType = 'bar';
+                } else if (metric === 'monthly_performance') {
+                    labels = fund.monthly_labels;
+                    data = fund.monthly_values;
+                    label = fund.name + ' Monthly Performance (%)';
+                    chartType = 'bar';
+                } else if (metric === 'cumulative_performance') {
+                    labels = fund.cumulative_labels;
+                    data = fund.cumulative_values;
+                    label = fund.name + ' Cumulative Performance (%)';
+                    chartType = 'line';
+                }
+
+                if (fundChart) {
+                    fundChart.destroy();
+                }
+
+                fundChart = new Chart(fundChartCtx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            borderColor: chartType === 'line' ? 'rgba(75, 192, 192, 1)' : undefined,
+                            backgroundColor: chartType === 'bar' ? 'rgba(75, 192, 192, 0.2)' : undefined,
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        fundSelector.addEventListener('change', function() {
+            updateChart(this.value, metricSelector.value);
+        });
+
+        metricSelector.addEventListener('change', function() {
+            updateChart(fundSelector.value, this.value);
+        });
+
+        // Initial load
+        if (funds.length > 0) {
+            updateChart(fundSelector.value, metricSelector.value);
+        }
+
+        // Update the link to the strategies page
+        document.getElementById('goToStrategies').addEventListener('click', function(event) {
+            event.preventDefault();
+            var selectedFundId = fundSelector.value;
+            if (selectedFundId) {
+                window.location.href = `/dashboard/funds/${selectedFundId}/strategies/`;
+            } else {
+                alert('Please select a fund first.');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -11,4 +11,6 @@ urlpatterns = [
     path('add-assets/', views.add_assets, name='add_assets'),
     path('add-transactions/', views.add_transactions, name='add_transactions'),
     path('settings/', views.settings, name='settings'),
+    path('funds/', views.funds, name='funds'),
+    path('funds/<int:fund_id>/strategies/', views.strategies, name='strategies'),
 ]

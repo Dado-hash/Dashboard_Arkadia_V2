@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 import requests
-
+from django.db import models
 from services.update_assets import update_all_assets
-from .models import Asset, ExchangeAccount, Strategy, Transaction, Wallet
+from .models import Asset, Balance, Fund, PerformanceMetric, Strategy, Transaction
 from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, TransactionFormSet, WalletForm
 
 # Create your views here.
@@ -136,3 +136,67 @@ def add_transactions(request):
         'formset': formset,
         'strategies': strategies
     })
+
+def funds(request):
+    funds = Fund.objects.all()
+    funds_data = []
+
+    for fund in funds:
+        balance_data = Balance.objects.filter(fund=fund).order_by('date')
+        daily_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='daily_performance').order_by('date')
+        monthly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='monthly_performance').order_by('date')
+        cumulative_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='cumulative_performance').order_by('date')
+        
+        fund_data = {
+            'id': fund.id,
+            'name': fund.name,
+            'balance_labels': [item.date.strftime('%Y-%m-%d') for item in balance_data],
+            'balance_values': [float(item.value_usd) for item in balance_data], 
+            'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
+            'daily_values': [float(item.value) for item in daily_performance_data], 
+            'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
+            'monthly_values': [float(item.value) for item in monthly_performance_data], 
+            'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
+            'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+        }
+
+        funds_data.append(fund_data)
+
+    context = {
+        'funds': funds,
+        'funds_data': json.dumps(funds_data),  
+    }
+    return render(request, 'funds_and_strategies/funds.html', context)
+
+def strategies(request, fund_id):
+    fund = get_object_or_404(Fund, id=fund_id)
+    strategies = Strategy.objects.filter(fund=fund)
+
+    # Prepara i dati per tutte le strategie
+    strategies_data = []
+    for strategy in strategies:
+        balance_data = Balance.objects.filter(strategy=strategy).order_by('date')
+        daily_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='daily_performance').order_by('date')
+        monthly_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='monthly_performance').order_by('date')
+        cumulative_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='cumulative_performance').order_by('date')
+
+        strategy_data = {
+            'id': strategy.id,
+            'name': strategy.name,
+            'balance_labels': [item.date.strftime('%Y-%m-%d') for item in balance_data],
+            'balance_values': [float(item.value_usd) for item in balance_data], 
+            'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
+            'daily_values': [float(item.value) for item in daily_performance_data], 
+            'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
+            'monthly_values': [float(item.value) for item in monthly_performance_data], 
+            'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
+            'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+        }
+
+        strategies_data.append(strategy_data)
+
+    context = {
+        'strategies': strategies,
+        'strategies_data': json.dumps(strategies_data), 
+    }
+    return render(request, 'funds_and_strategies/strategies.html', context)
