@@ -7,7 +7,12 @@
     
     <!-- Selettori della Strategia e della Metrica -->
     <div class="row mt-4">
-        <div class="col-md-3 offset-md-3">
+        <div class="col-md-2 d-flex justify-content-center align-items-center">
+            <div id="latestValue" class="alert alert-info text-center" role="alert">
+                Latest Value: <span id="latestValueText">N/A</span>
+            </div>
+        </div>
+        <div class="col-md-2">
             <label for="strategySelector" class="form-label">Select Strategy:</label>
             <select id="strategySelector" class="form-select mb-3">
                 {% for strategy in strategies %}
@@ -15,7 +20,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="metricSelector" class="form-label">Select Metric:</label>
             <select id="metricSelector" class="form-select mb-3">
                 <option value="balance">Balance</option>
@@ -64,6 +69,7 @@
         var metricSelector = document.getElementById('metricSelector');
         var ctx = document.getElementById('strategyPerformanceChart').getContext('2d');
         var chart;
+        var latestValueText = document.getElementById('latestValueText');
 
         function updateChart(strategyId, metric) {
             var strategy = strategies.find(s => s.id === parseInt(strategyId));
@@ -73,25 +79,30 @@
                 var label = '';
                 var chartType = 'line';
                 var backgroundColors = [];
+                var latestValue = 'N/A';
 
                 if (metric === 'balance') {
                     labels = strategy.balance_labels;
                     data = strategy.balance_values;
                     label = strategy.name + ' Balance (USD)';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'daily_performance') {
                     labels = strategy.daily_labels;
                     data = strategy.daily_values;
                     label = strategy.name + ' Daily Performance (%)';
                     chartType = 'bar';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'monthly_performance') {
                     labels = strategy.monthly_labels;
                     data = strategy.monthly_values;
                     label = strategy.name + ' Monthly Performance (%)';
                     chartType = 'bar';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'cumulative_performance') {
                     labels = strategy.cumulative_labels;
                     data = strategy.cumulative_values;
                     label = strategy.name + ' Cumulative Performance (%)';
+                    latestValue = data[data.length - 1] || 'N/A';
                 }
 
                 if (chartType === 'bar') {
@@ -134,6 +145,8 @@
                         }
                     }
                 });
+
+                latestValueText.textContent = latestValue;
 
                 // Aggiorna la tabella dell'allocazione degli asset
                 var tableBody = document.getElementById('assetAllocationTableBody');

@@ -7,13 +7,12 @@
     
     <!-- Selettori del Fondo e della Metrica -->
     <div class="row mt-4">
-        <div class="col-md-3 d-flex justify-content-center align-items-center" style="height: 100px;">
-            <button id="updateAssets" class="btn btn-primary">
-                <span id="updateAssetsText">Update Assets</span>
-                <span id="updateAssetsSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            </button>
+        <div class="col-md-2 d-flex justify-content-center align-items-center">
+            <div id="latestValue" class="alert alert-info text-center" role="alert">
+                Latest Value: <span id="latestValueText">N/A</span>
+            </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="fundSelector" class="form-label">Select Fund:</label>
             <select id="fundSelector" class="form-select mb-3">
                 {% for fund in funds %}
@@ -21,7 +20,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="metricSelector" class="form-label">Select Metric:</label>
             <select id="metricSelector" class="form-select mb-3">
                 <option value="balance">Balance</option>
@@ -30,7 +29,13 @@
                 <option value="cumulative_performance">Cumulative Performance</option>
             </select>
         </div>
-        <div class="col-md-3 d-flex justify-content-center align-items-center" style="height: 100px;">
+        <div class="col-md-2 d-flex justify-content-center align-items-center" style="height: 100px;">
+            <button id="updateAssets" class="btn btn-primary">
+                <span id="updateAssetsText">Update Assets</span>
+                <span id="updateAssetsSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+        </div>
+        <div class="col-md-2 d-flex justify-content-center align-items-center" style="height: 100px;">
             <a id="goToStrategies" class="btn btn-primary">Go to Strategies</a>
         </div>
     </div>
@@ -85,6 +90,7 @@
         var updateButtonText = document.getElementById('updateAssetsText');
         var updateButtonSpinner = document.getElementById('updateAssetsSpinner');
         var assetAllocationTable = document.getElementById('assetAllocationTable');
+        var latestValueText = document.getElementById('latestValueText');
 
         function updateChart(fundId, metric) {
             var fund = funds.find(f => f.id === parseInt(fundId));
@@ -94,25 +100,30 @@
                 var label = '';
                 var chartType = 'line';
                 var backgroundColors = [];
+                var latestValue = 'N/A';
 
                 if (metric === 'balance') {
                     labels = fund.balance_labels;
                     data = fund.balance_values;
                     label = fund.name + ' Balance (USD)';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'daily_performance') {
                     labels = fund.daily_labels;
                     data = fund.daily_values;
                     label = fund.name + ' Daily Performance (%)';
                     chartType = 'bar';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'monthly_performance') {
                     labels = fund.monthly_labels;
                     data = fund.monthly_values;
                     label = fund.name + ' Monthly Performance (%)';
                     chartType = 'bar';
+                    latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'cumulative_performance') {
                     labels = fund.cumulative_labels;
                     data = fund.cumulative_values;
                     label = fund.name + ' Cumulative Performance (%)';
+                    latestValue = data[data.length - 1] || 'N/A';
                 }
 
                 if (chartType === 'bar') {
@@ -156,6 +167,7 @@
                     }
                 });
 
+                latestValueText.textContent = latestValue;
                 updateAssetAllocationTable(fund);
             }
         }
