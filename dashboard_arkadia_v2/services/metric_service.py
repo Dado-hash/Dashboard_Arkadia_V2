@@ -99,8 +99,6 @@ class MetricService:
                 last_fridays[-2], last_fridays[-1] = last_fridays[-1], last_fridays[-2]
                 last_fridays.pop()
 
-            print(last_fridays)
-
             for i in range(len(last_fridays) - 1):
                 start_date = last_fridays[i]
                 end_date = last_fridays[i + 1]
@@ -217,8 +215,6 @@ class MetricService:
                 last_fridays.append(today)
                 last_fridays[-2], last_fridays[-1] = last_fridays[-1], last_fridays[-2]
                 last_fridays.pop()
-
-            print(last_fridays)
 
             for i in range(len(last_fridays) - 1):
                 start_date = last_fridays[i]
