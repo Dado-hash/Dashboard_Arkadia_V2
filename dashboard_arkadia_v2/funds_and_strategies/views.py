@@ -1,13 +1,14 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 import json
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 import requests
-from django.db import models
 from services.update_assets import update_all_assets
 from .models import Asset, Balance, Fund, PerformanceMetric, Strategy, Transaction
 from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, TransactionFormSet, WalletForm
+from django.db.models import Sum, Max
 
 # Create your views here.
 
@@ -162,6 +163,29 @@ def add_transactions(request):
         'strategies': strategies
     })
 
+def get_asset_allocation_fund(fund):
+    latest_date = Asset.objects.filter(strategy__fund=fund).aggregate(latest_date=Max('date'))['latest_date']
+    assets = Asset.objects.filter(strategy__fund=fund, date=latest_date)
+    asset_totals = defaultdict(lambda: {'value_usd': 0, 'percentage': 0})
+    total_value = assets.aggregate(total=Sum('value_usd'))['total'] or 1
+
+    for asset in assets:
+        asset_totals[asset.name]['value_usd'] += asset.value_usd
+
+    asset_allocation = []
+    for asset_name, data in asset_totals.items():
+        percentage = (data['value_usd'] / total_value) * 100
+        if percentage > 0.1:
+            asset_allocation.append({
+                'name': asset_name,
+                'value_usd': float(data['value_usd']),
+                'percentage': float(percentage),
+            })
+    
+    # Ordina per percentuale decrescente
+    asset_allocation = sorted(asset_allocation, key=lambda x: x['percentage'], reverse=True)
+    return asset_allocation
+
 def funds(request):
     funds = Fund.objects.all()
     funds_data = []
@@ -171,6 +195,7 @@ def funds(request):
         daily_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='daily_performance').order_by('date')
         monthly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='monthly_performance').order_by('date')
         cumulative_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='cumulative_performance').order_by('date')
+        asset_allocation_data = get_asset_allocation_fund(fund)
         
         fund_data = {
             'id': fund.id,
@@ -183,6 +208,7 @@ def funds(request):
             'monthly_values': [float(item.value) for item in monthly_performance_data], 
             'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
             'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+            'asset_allocation': asset_allocation_data,
         }
 
         funds_data.append(fund_data)
@@ -192,6 +218,28 @@ def funds(request):
         'funds_data': json.dumps(funds_data),  
     }
     return render(request, 'funds_and_strategies/funds.html', context)
+
+def get_asset_allocation_strategy(strategy):
+    latest_date = Asset.objects.filter(strategy=strategy).aggregate(latest_date=Max('date'))['latest_date']
+    assets = Asset.objects.filter(strategy=strategy, date=latest_date)
+    asset_totals = defaultdict(lambda: {'value_usd': 0, 'percentage': 0})
+    total_value = assets.aggregate(total=Sum('value_usd'))['total'] or 1
+
+    for asset in assets:
+        asset_totals[asset.name]['value_usd'] += asset.value_usd
+
+    asset_allocation = []
+    for asset_name, data in asset_totals.items():
+        percentage = (data['value_usd'] / total_value) * 100
+        if percentage > 0.1:
+            asset_allocation.append({
+                'name': asset_name,
+                'value_usd': float(data['value_usd']),
+                'percentage': float(percentage),
+            })
+    
+    asset_allocation = sorted(asset_allocation, key=lambda x: x['percentage'], reverse=True)
+    return asset_allocation
 
 def strategies(request, fund_id):
     fund = get_object_or_404(Fund, id=fund_id)
@@ -204,6 +252,7 @@ def strategies(request, fund_id):
         daily_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='daily_performance').order_by('date')
         monthly_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='monthly_performance').order_by('date')
         cumulative_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='cumulative_performance').order_by('date')
+        asset_allocation_data = get_asset_allocation_strategy(strategy)
 
         strategy_data = {
             'id': strategy.id,
@@ -216,6 +265,7 @@ def strategies(request, fund_id):
             'monthly_values': [float(item.value) for item in monthly_performance_data], 
             'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
             'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+            'asset_allocation': asset_allocation_data,
         }
 
         strategies_data.append(strategy_data)

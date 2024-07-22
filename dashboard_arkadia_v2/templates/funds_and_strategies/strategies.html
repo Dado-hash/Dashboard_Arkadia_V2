@@ -32,6 +32,25 @@
             <canvas id="strategyPerformanceChart"></canvas>
         </div>
     </div>
+
+    <!-- Tabella dell'allocazione degli asset -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="text-center">Asset Allocation</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Value (USD)</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody id="assetAllocationTableBody">
+                    <!-- I dati saranno riempiti dinamicamente tramite JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -113,6 +132,26 @@
                             }
                         }
                     }
+                });
+
+                // Aggiorna la tabella dell'allocazione degli asset
+                var tableBody = document.getElementById('assetAllocationTableBody');
+                tableBody.innerHTML = ''; // Svuota la tabella
+                strategy.asset_allocation.forEach(function(asset) {
+                    var row = document.createElement('tr');
+                    var nameCell = document.createElement('td');
+                    var valueCell = document.createElement('td');
+                    var percentageCell = document.createElement('td');
+
+                    nameCell.textContent = asset.name;
+                    valueCell.textContent = asset.value_usd.toFixed(2);
+                    percentageCell.textContent = asset.percentage.toFixed(2) + '%';
+
+                    row.appendChild(nameCell);
+                    row.appendChild(valueCell);
+                    row.appendChild(percentageCell);
+
+                    tableBody.appendChild(row);
                 });
             }
         }
