@@ -65,6 +65,7 @@
                 var data = [];
                 var label = '';
                 var chartType = 'line';
+                var backgroundColors = [];
 
                 if (metric === 'balance') {
                     labels = fund.balance_labels;
@@ -84,7 +85,10 @@
                     labels = fund.cumulative_labels;
                     data = fund.cumulative_values;
                     label = fund.name + ' Cumulative Performance (%)';
-                    chartType = 'line';
+                }
+
+                if (chartType === 'bar') {
+                    backgroundColors = data.map(value => value < 0 ? 'rgba(255, 99, 132, 0.2)' : 'rgba(75, 192, 192, 0.2)');
                 }
 
                 if (fundChart) {
@@ -99,7 +103,7 @@
                             label: label,
                             data: data,
                             borderColor: chartType === 'line' ? 'rgba(75, 192, 192, 1)' : undefined,
-                            backgroundColor: chartType === 'bar' ? 'rgba(75, 192, 192, 0.2)' : undefined,
+                            backgroundColor: chartType === 'bar' ? backgroundColors : undefined,
                             borderWidth: 2,
                             fill: false
                         }]
