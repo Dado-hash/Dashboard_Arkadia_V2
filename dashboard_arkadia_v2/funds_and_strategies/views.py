@@ -166,11 +166,12 @@ def add_transactions(request):
 def get_asset_allocation_fund(fund):
     latest_date = Asset.objects.filter(strategy__fund=fund).aggregate(latest_date=Max('date'))['latest_date']
     assets = Asset.objects.filter(strategy__fund=fund, date=latest_date)
-    asset_totals = defaultdict(lambda: {'value_usd': 0, 'percentage': 0})
+    asset_totals = defaultdict(lambda: {'value_usd': 0, 'amount':0, 'percentage': 0})
     total_value = assets.aggregate(total=Sum('value_usd'))['total'] or 1
 
     for asset in assets:
         asset_totals[asset.name]['value_usd'] += asset.value_usd
+        asset_totals[asset.name]['amount'] += asset.amount
 
     asset_allocation = []
     for asset_name, data in asset_totals.items():
@@ -179,6 +180,7 @@ def get_asset_allocation_fund(fund):
             asset_allocation.append({
                 'name': asset_name,
                 'value_usd': float(data['value_usd']),
+                'amount': float(data['amount']),
                 'percentage': float(percentage),
             })
     
@@ -222,11 +224,12 @@ def funds(request):
 def get_asset_allocation_strategy(strategy):
     latest_date = Asset.objects.filter(strategy=strategy).aggregate(latest_date=Max('date'))['latest_date']
     assets = Asset.objects.filter(strategy=strategy, date=latest_date)
-    asset_totals = defaultdict(lambda: {'value_usd': 0, 'percentage': 0})
+    asset_totals = defaultdict(lambda: {'value_usd': 0, 'amount':0, 'percentage': 0})
     total_value = assets.aggregate(total=Sum('value_usd'))['total'] or 1
 
     for asset in assets:
         asset_totals[asset.name]['value_usd'] += asset.value_usd
+        asset_totals[asset.name]['amount'] += asset.amount
 
     asset_allocation = []
     for asset_name, data in asset_totals.items():
@@ -235,6 +238,7 @@ def get_asset_allocation_strategy(strategy):
             asset_allocation.append({
                 'name': asset_name,
                 'value_usd': float(data['value_usd']),
+                'amount': float(data['amount']),
                 'percentage': float(percentage),
             })
     

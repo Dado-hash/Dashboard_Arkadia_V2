@@ -50,6 +50,7 @@
                 <thead>
                     <tr>
                         <th>Asset</th>
+                        <th>Amount</th>
                         <th>Value (USD)</th>
                         <th>Percentage (%)</th>
                     </tr>
@@ -58,6 +59,7 @@
                     {% for asset in funds_data.0.asset_allocation %}
                     <tr>
                         <td>{{ asset.name }}</td>
+                        <td>{{ asset.amount }}</td>
                         <td>{{ asset.value_usd }}</td>
                         <td>{{ asset.percentage|floatformat:2 }}</td>
                     </tr>
@@ -168,14 +170,17 @@
             fund.asset_allocation.forEach(asset => {
                 var row = document.createElement('tr');
                 var nameCell = document.createElement('td');
+                var amountCell = document.createElement('td');
                 var valueCell = document.createElement('td');
                 var percentageCell = document.createElement('td');
 
                 nameCell.textContent = asset.name;
+                amountCell.textContent = asset.amount.toFixed(2);
                 valueCell.textContent = asset.value_usd;
                 percentageCell.textContent = asset.percentage.toFixed(2);
 
                 row.appendChild(nameCell);
+                row.appendChild(amountCell);
                 row.appendChild(valueCell);
                 row.appendChild(percentageCell);
 

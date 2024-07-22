@@ -27,7 +27,7 @@
     </div>
 
     <!-- Dettaglio della Strategia -->
-    <div class="row mt-2">
+    <div class="row mt-3">
         <div class="col-md-12">
             <canvas id="strategyPerformanceChart"></canvas>
         </div>
@@ -41,6 +41,7 @@
                 <thead>
                     <tr>
                         <th>Asset</th>
+                        <th>Amount</th>
                         <th>Value (USD)</th>
                         <th>Percentage</th>
                     </tr>
@@ -140,14 +141,17 @@
                 strategy.asset_allocation.forEach(function(asset) {
                     var row = document.createElement('tr');
                     var nameCell = document.createElement('td');
+                    var amountCell = document.createElement('td');
                     var valueCell = document.createElement('td');
                     var percentageCell = document.createElement('td');
 
                     nameCell.textContent = asset.name;
+                    amountCell.textContent = asset.amount.toFixed(2);
                     valueCell.textContent = asset.value_usd.toFixed(2);
                     percentageCell.textContent = asset.percentage.toFixed(2) + '%';
 
                     row.appendChild(nameCell);
+                    row.appendChild(amountCell);
                     row.appendChild(valueCell);
                     row.appendChild(percentageCell);
 
