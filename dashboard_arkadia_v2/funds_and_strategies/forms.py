@@ -28,7 +28,7 @@ class ExchangeAccountForm(forms.ModelForm):
 
     class Meta:
         model = ExchangeAccount
-        fields = ['name', 'strategy', 'description']
+        fields = ['name', 'exchange', 'strategy', 'description']
 
     def save(self, commit=True):
         instance = super().save(commit=False)
