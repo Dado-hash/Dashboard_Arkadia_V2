@@ -178,26 +178,32 @@
                 assetAllocationTable.removeChild(assetAllocationTable.firstChild);
             }
 
-            // Populate the table with new rows
-            fund.asset_allocation.forEach(asset => {
-                var row = document.createElement('tr');
-                var nameCell = document.createElement('td');
-                var amountCell = document.createElement('td');
-                var valueCell = document.createElement('td');
-                var percentageCell = document.createElement('td');
+            // Check if asset_allocation exists and is an array
+            if (Array.isArray(fund.asset_allocation)) {
+                // Populate the table with new rows
+                fund.asset_allocation.forEach(asset => {
+                    var row = document.createElement('tr');
+                    var nameCell = document.createElement('td');
+                    var amountCell = document.createElement('td');
+                    var valueCell = document.createElement('td');
+                    var percentageCell = document.createElement('td');
 
-                nameCell.textContent = asset.name;
-                amountCell.textContent = asset.amount.toFixed(2);
-                valueCell.textContent = asset.value_usd;
-                percentageCell.textContent = asset.percentage.toFixed(2);
+                    nameCell.textContent = asset.name;
+                    amountCell.textContent = asset.amount.toFixed(2);
+                    valueCell.textContent = asset.value_usd;
+                    percentageCell.textContent = asset.percentage.toFixed(2);
 
-                row.appendChild(nameCell);
-                row.appendChild(amountCell);
-                row.appendChild(valueCell);
-                row.appendChild(percentageCell);
+                    row.appendChild(nameCell);
+                    row.appendChild(amountCell);
+                    row.appendChild(valueCell);
+                    row.appendChild(percentageCell);
 
-                assetAllocationTable.appendChild(row);
-            });
+                    assetAllocationTable.appendChild(row);
+                });
+            } else {
+                // If asset_allocation is not available, you can log a message or handle the case accordingly
+                console.warn('No asset allocation data available for the selected fund.');
+            }
         }
 
         fundSelector.addEventListener('change', function() {

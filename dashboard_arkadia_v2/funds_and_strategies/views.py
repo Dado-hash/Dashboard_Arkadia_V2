@@ -104,6 +104,7 @@ def update_assets(request):
             daily_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='daily_performance').order_by('date')
             monthly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='monthly_performance').order_by('date')
             cumulative_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='cumulative_performance').order_by('date')
+            asset_allocation_data = get_asset_allocation_fund(fund)
 
             fund_data = {
                 'id': fund.id,
@@ -116,6 +117,7 @@ def update_assets(request):
                 'monthly_values': [float(item.value) for item in monthly_performance_data],
                 'cumulative_labels': [item.date.strftime('%Y-%m') for item in cumulative_performance_data],
                 'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+                'asset_allocation': asset_allocation_data,
             }
             funds_data.append(fund_data)
 
