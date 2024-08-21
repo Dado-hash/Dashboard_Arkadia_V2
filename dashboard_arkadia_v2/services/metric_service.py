@@ -62,6 +62,48 @@ class MetricService:
         except Exception as e:
             logger.error(f"Error calculating cumulative performance for {strategy.name} on {balance_date}: {e}")
 
+    def get_last_tuesday(self, reference_date):
+        last_tuesday = reference_date - timedelta(days=(reference_date.weekday() - 1) % 7)
+        return last_tuesday
+    
+    def calculate_weekly_performance(self, strategy):
+        try:
+            balance_dates = Balance.objects.filter(strategy=strategy).values_list('date', flat=True).distinct().order_by('date')
+            if not balance_dates:
+                return
+
+            tuesdays = [self.get_last_tuesday(date) for date in balance_dates if self.get_last_tuesday(date) == date]
+
+            last_tuesday = self.get_last_tuesday(date.today())
+            if last_tuesday not in tuesdays and last_tuesday > tuesdays[-1]:
+                tuesdays.append(last_tuesday)
+
+            for i in range(len(tuesdays) - 1):
+                start_date = tuesdays[i]
+                end_date = tuesdays[i + 1]
+
+                start_balance = Balance.objects.filter(strategy=strategy, date=start_date).first()
+                end_balance = Balance.objects.filter(strategy=strategy, date=end_date).first()
+
+                if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
+                    deposits = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
+                    weekly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                else:
+                    weekly_performance = Decimal('0.0')
+
+                PerformanceMetric.objects.update_or_create(
+                    strategy=strategy,
+                    date=end_date,
+                    metric_name="weekly_performance",
+                    defaults={'value': weekly_performance}
+                )
+                logger.info(f"Weekly performance for {strategy.name} from {start_date} to {end_date}: {weekly_performance}%")
+        except Exception as e:
+            logger.error(f"Error calculating weekly performance for {strategy.name}: {e}")
+
     def get_last_friday(self, year, month):
         last_day_of_month = datetime(year, month, 1) + timedelta(days=32)
         last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
@@ -131,6 +173,7 @@ class MetricService:
             for balance_date in balance_dates:
                 self.calculate_daily_performance(strategy, balance_date)
                 self.calculate_cumulative_performance(strategy, balance_date)
+            self.calculate_weekly_performance(strategy)
             self.calculate_monthly_performance(strategy)
         except Exception as e:
             logger.error(f"Error calculating performances for strategy {strategy.name}: {e}")
@@ -187,6 +230,44 @@ class MetricService:
             logger.info(f"Cumulative performance for {fund.name} on {balance_date}: {performance}%")
         except Exception as e:
             logger.error(f"Error calculating cumulative performance for {fund.name} on {balance_date}: {e}")
+
+    def calculate_weekly_performance_for_fund(self, fund):
+        try:
+            balance_dates = Balance.objects.filter(fund=fund).values_list('date', flat=True).distinct().order_by('date')
+            if not balance_dates:
+                return
+
+            tuesdays = [self.get_last_tuesday(date) for date in balance_dates if self.get_last_tuesday(date) == date]
+
+            last_tuesday = self.get_last_tuesday(date.today())
+            if last_tuesday not in tuesdays and last_tuesday > tuesdays[-1]:
+                tuesdays.append(last_tuesday)
+
+            for i in range(len(tuesdays) - 1):
+                start_date = tuesdays[i]
+                end_date = tuesdays[i + 1]
+
+                start_balance = Balance.objects.filter(fund=fund, date=start_date).first()
+                end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
+
+                if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
+                    deposits = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
+                    weekly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                else:
+                    weekly_performance = Decimal('0.0')
+
+                PerformanceMetric.objects.update_or_create(
+                    fund=fund,
+                    date=end_date,
+                    metric_name="weekly_performance",
+                    defaults={'value': weekly_performance}
+                )
+                logger.info(f"Weekly performance for {fund.name} from {start_date} to {end_date}: {weekly_performance}%")
+        except Exception as e:
+            logger.error(f"Error calculating weekly performance for {fund.name}: {e}")
 
     def calculate_monthly_performance_for_fund(self, fund):
         try:
@@ -248,6 +329,7 @@ class MetricService:
             for balance_date in balance_dates:
                 self.calculate_daily_performance_for_fund(fund, balance_date)
                 self.calculate_cumulative_performance_for_fund(fund, balance_date)
+            self.calculate_weekly_performance_for_fund(fund)
             self.calculate_monthly_performance_for_fund(fund)
         except Exception as e:
             logger.error(f"Error calculating performances for fund {fund.name}: {e}")

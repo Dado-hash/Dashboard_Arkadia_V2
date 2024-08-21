@@ -197,6 +197,7 @@ def funds(request):
     for fund in funds:
         balance_data = Balance.objects.filter(fund=fund).order_by('date')
         daily_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='daily_performance').order_by('date')
+        weekly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='weekly_performance').order_by('date')
         monthly_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='monthly_performance').order_by('date')
         cumulative_performance_data = PerformanceMetric.objects.filter(fund=fund, metric_name='cumulative_performance').order_by('date')
         asset_allocation_data = get_asset_allocation_fund(fund)
@@ -208,6 +209,8 @@ def funds(request):
             'balance_values': [float(item.value_usd) for item in balance_data], 
             'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
             'daily_values': [float(item.value) for item in daily_performance_data], 
+            'weekly_labels': [item.date.strftime('%Y-%m-%d') for item in weekly_performance_data],
+            'weekly_values': [float(item.value) for item in weekly_performance_data],
             'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
             'monthly_values': [float(item.value) for item in monthly_performance_data], 
             'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
@@ -256,6 +259,7 @@ def strategies(request, fund_id):
     for strategy in strategies:
         balance_data = Balance.objects.filter(strategy=strategy).order_by('date')
         daily_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='daily_performance').order_by('date')
+        weekly_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='weekly_performance').order_by('date')
         monthly_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='monthly_performance').order_by('date')
         cumulative_performance_data = PerformanceMetric.objects.filter(strategy=strategy, metric_name='cumulative_performance').order_by('date')
         asset_allocation_data = get_asset_allocation_strategy(strategy)
@@ -267,6 +271,8 @@ def strategies(request, fund_id):
             'balance_values': [float(item.value_usd) for item in balance_data], 
             'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
             'daily_values': [float(item.value) for item in daily_performance_data], 
+            'weekly_labels': [item.date.strftime('%Y-%m-%d') for item in weekly_performance_data],
+            'weekly_values': [float(item.value) for item in weekly_performance_data],
             'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
             'monthly_values': [float(item.value) for item in monthly_performance_data], 
             'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
