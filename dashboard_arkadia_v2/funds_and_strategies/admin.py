@@ -12,7 +12,7 @@ class StrategyAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'strategy', 'exchange_account', 'wallet', 'amount', 'value_usd', 'date')
+    list_display = ('name', 'strategy', 'exchange_or_wallet', 'amount', 'value_usd', 'date')
     search_fields = ('name', 'strategy__name')
     list_filter = ('strategy', 'date')
     ordering = ('date',)

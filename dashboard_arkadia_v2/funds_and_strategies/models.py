@@ -29,6 +29,13 @@ class Asset(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
 
+    def __str__(self):
+        return f"{self.exchange_account.name if self.exchange_account else self.wallet.name} - {self.date}"
+
+    @property
+    def exchange_or_wallet(self):
+        return self.exchange_account.name if self.exchange_account else self.wallet.name
+
     class Meta:
         ordering = ['date']
 
