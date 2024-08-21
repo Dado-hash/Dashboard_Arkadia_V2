@@ -27,6 +27,7 @@
                 <option value="daily_performance">Daily Performance</option>
                 <option value="weekly_performance">Weekly Performance</option>
                 <option value="monthly_performance">Monthly Performance</option>
+                <option value="annual_performance">Annual Performance</option>
                 <option value="cumulative_performance">Cumulative Performance</option>
             </select>
         </div>
@@ -103,6 +104,12 @@
                     labels = strategy.monthly_labels;
                     data = strategy.monthly_values;
                     label = strategy.name + ' Monthly Performance (%)';
+                    chartType = 'bar';
+                    latestValue = data[data.length - 1] || 'N/A';
+                } else if (metric === 'annual_performance') {
+                    labels = strategy.annual_labels;
+                    data = strategy.annual_values;
+                    label = strategy.name + ' Annual Performance (%)';
                     chartType = 'bar';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'cumulative_performance') {
