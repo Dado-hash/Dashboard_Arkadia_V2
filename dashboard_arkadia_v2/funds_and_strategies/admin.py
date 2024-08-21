@@ -19,8 +19,8 @@ class AssetAdmin(admin.ModelAdmin):
 
 class BalanceAdmin(admin.ModelAdmin):
     list_display = ('strategy_or_fund', 'value_usd', 'date')
-    search_fields = ('strategy__name',)
-    list_filter = ('strategy', 'date')
+    search_fields = ('strategy__name', 'fund__name')
+    list_filter = ('strategy', 'fund', 'date')
     ordering = ('date',)
 
 class TransactionAdmin(admin.ModelAdmin):
