@@ -43,6 +43,13 @@ class Balance(models.Model):
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.strategy.name if self.strategy else self.fund.name} - {self.date}"
+
+    @property
+    def strategy_or_fund(self):
+        return self.strategy.name if self.strategy else self.fund.name
+
     class Meta:
         ordering = ['date']
 
@@ -58,6 +65,14 @@ class Transaction(models.Model):
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
+    fund = models.ForeignKey(Fund, null=True, blank=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.strategy.name if self.strategy else self.fund.name} - {self.type} - {self.date}"
+
+    @property
+    def strategy_or_fund(self):
+        return self.strategy.name if self.strategy else self.fund.name
 
     class Meta:
         ordering = ['date']
@@ -121,3 +136,4 @@ class Wallet(models.Model):
     def __str__(self):
         return self.name
     
+# aggiungere modello per i cambi valute

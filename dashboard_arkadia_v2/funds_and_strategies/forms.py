@@ -56,12 +56,12 @@ class WalletForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        fields = ['name', 'strategy', 'amount', 'price', 'date']
+        fields = ['name', 'strategy', 'exchange_account','amount', 'price', 'date']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-AssetFormSet = modelformset_factory(Asset, form=AssetForm, extra=1, can_delete=True)
+AssetFormSet = modelformset_factory(Asset, form=AssetForm, extra=1)
 
 class TransactionForm(forms.ModelForm):
     TRANSACTION_TYPES = [
@@ -73,9 +73,9 @@ class TransactionForm(forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['type', 'asset', 'amount', 'price', 'date', 'strategy']
-        widgtes = {
+        fields = ['type', 'asset', 'amount', 'price', 'date', 'strategy', 'fund']
+        widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-TransactionFormSet = modelformset_factory(Transaction, form=TransactionForm, extra=1, can_delete=True)
+TransactionFormSet = modelformset_factory(Transaction, form=TransactionForm, extra=1)

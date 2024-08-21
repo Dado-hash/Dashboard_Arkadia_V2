@@ -1,4 +1,3 @@
-<!-- templates/add_transactions.html -->
 {% extends 'base.html' %}
 
 {% block title %}Add Transactions{% endblock %}
@@ -62,8 +61,18 @@
                     <input type="date" name="form-__prefix__-date" required class="form-control" id="id_form-__prefix__-date">
                 </div>
                 <div class="mb-3">
+                    <label for="id_form-__prefix__-fund">Fund:</label>
+                    <select name="form-__prefix__-fund" class="form-select" id="id_form-__prefix__-fund">
+                        <option value="">---------</option>
+                        {% for fund in funds %}
+                            <option value="{{ fund.id }}">{{ fund.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label for="id_form-__prefix__-strategy">Strategy:</label>
-                    <select name="form-__prefix__-strategy" required class="form-select" id="id_form-__prefix__-strategy">
+                    <select name="form-__prefix__-strategy" class="form-select" id="id_form-__prefix__-strategy">
+                        <option value="">---------</option>
                         {% for strategy in strategies %}
                             <option value="{{ strategy.id }}">{{ strategy.name }}</option>
                         {% endfor %}
@@ -82,6 +91,24 @@
         formsetContainer.on('click', '.remove-form', function() {
             $(this).closest('.transaction-form').remove();
             formsetTotalForms.val(parseInt(formsetTotalForms.val()) - 1);
+        });
+
+        // Ensure only one of fund or strategy can be selected
+        formsetContainer.on('change', 'select[id^="id_form-"][id$="-fund"], select[id^="id_form-"][id$="-strategy"]', function() {
+            var fundField = $(this).closest('.transaction-form').find('select[id$="-fund"]');
+            var strategyField = $(this).closest('.transaction-form').find('select[id$="-strategy"]');
+
+            if (fundField.val()) {
+                strategyField.prop('disabled', true);
+            } else {
+                strategyField.prop('disabled', false);
+            }
+
+            if (strategyField.val()) {
+                fundField.prop('disabled', true);
+            } else {
+                fundField.prop('disabled', false);
+            }
         });
     });
 </script>

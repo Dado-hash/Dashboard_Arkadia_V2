@@ -141,8 +141,8 @@ class MetricService:
             previous_balance_date = balance_date - timedelta(days=1)
             previous_balance = Balance.objects.filter(fund=fund, date=previous_balance_date).first()
 
-            deposits = Transaction.objects.filter(strategy__fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(strategy__fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
             if previous_balance and current_balance and previous_balance.value_usd > Decimal('0.0'):
                 adjusted_previous_value = Decimal(previous_balance.value_usd) + deposits - withdrawals
@@ -169,8 +169,8 @@ class MetricService:
 
             current_balance = Balance.objects.filter(fund=fund, date=balance_date).first()
 
-            deposits = Transaction.objects.filter(strategy__fund=fund, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(strategy__fund=fund, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
             if initial_balance and current_balance and initial_balance.value_usd > Decimal('0.0'):
                 adjusted_initial_value = Decimal(initial_balance.value_usd) + deposits - withdrawals
@@ -224,8 +224,8 @@ class MetricService:
                 end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(strategy__fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(strategy__fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
                     adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
                     monthly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
