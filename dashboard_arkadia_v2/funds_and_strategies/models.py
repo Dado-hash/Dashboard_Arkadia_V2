@@ -143,4 +143,15 @@ class Wallet(models.Model):
     def __str__(self):
         return self.name
     
-# aggiungere modello per i cambi valute
+class ExchangeRate(models.Model):
+    from_currency = models.CharField(max_length=10)
+    to_currency = models.CharField(max_length=10)
+    rate = models.DecimalField(max_digits=20, decimal_places=6)
+    date = models.DateField()
+
+    class Meta:
+        unique_together = ('from_currency', 'to_currency', 'date')
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.from_currency}/{self.to_currency} - {self.date}: {self.rate}"

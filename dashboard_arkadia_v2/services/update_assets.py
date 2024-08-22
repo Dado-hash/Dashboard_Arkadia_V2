@@ -1,3 +1,4 @@
+from .rates_service import update_exchange_rates_for_all_balances
 from .balance_service import update_all_balances
 from .metric_service import update_all_performances
 from funds_and_strategies.models import ExchangeAccount, Wallet
@@ -22,6 +23,9 @@ def update_all_assets():
     for wallet in wallets:
         wallet_service = WalletService(wallet, prices)
         wallet_service.save_assets_to_db()
+
+    # Aggiorna i tassi di cambio per tutti i bilanci
+    update_exchange_rates_for_all_balances()
 
     # Aggiorna i bilanci per tutte le strategie
     update_all_balances()

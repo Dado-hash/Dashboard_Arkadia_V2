@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Fund, Strategy, Asset, Balance, Transaction, PerformanceMetric, ExchangeAccount, Wallet
+from .models import ExchangeRate, Fund, Strategy, Asset, Balance, Transaction, PerformanceMetric, ExchangeAccount, Wallet
 
 class FundAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
@@ -47,6 +47,12 @@ class WalletAdmin(admin.ModelAdmin):
     list_filter = ('strategy',)
     ordering = ('name',)
 
+class ExchangeRateAdmin(admin.ModelAdmin):
+    list_display = ('from_currency', 'to_currency', 'date', 'rate')
+    search_fields = ('from_currency', 'to_currency')
+    list_filter = ('date', 'from_currency', 'to_currency')
+    ordering = ('date',)
+
 admin.site.register(Fund, FundAdmin)
 admin.site.register(Strategy, StrategyAdmin)
 admin.site.register(Asset, AssetAdmin)
@@ -55,3 +61,4 @@ admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(PerformanceMetric, PerformanceMetricAdmin)
 admin.site.register(ExchangeAccount, ExchangeAccountAdmin)
 admin.site.register(Wallet, WalletAdmin)
+admin.site.register(ExchangeRate, ExchangeRateAdmin)
