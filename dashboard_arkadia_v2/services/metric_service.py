@@ -79,12 +79,18 @@ class MetricService:
                 tuesdays.append(today)
             elif today.weekday() != 1:
                 last_tuesday = today - timedelta(days=today.weekday() - 1)
-                tuesdays.append(last_tuesday)
+                if last_tuesday not in tuesdays:
+                    tuesdays.append(last_tuesday)
                 tuesdays.append(today)
+
+            tuesdays = sorted(set(tuesdays))
 
             for i in range(len(tuesdays) - 1):
                 start_date = tuesdays[i]
                 end_date = tuesdays[i + 1]
+
+                if start_date == end_date:
+                    continue
 
                 start_balance = Balance.objects.filter(strategy=strategy, date=start_date).first()
                 end_balance = Balance.objects.filter(strategy=strategy, date=end_date).first()
@@ -107,6 +113,7 @@ class MetricService:
                 logger.info(f"Weekly performance for {strategy.name} from {start_date} to {end_date}: {weekly_performance}%")
         except Exception as e:
             logger.error(f"Error calculating weekly performance for {strategy.name}: {e}")
+
 
 
     def get_last_friday_of_month(self, year, month):
@@ -306,12 +313,20 @@ class MetricService:
                 tuesdays.append(today)
             elif today.weekday() != 1:
                 last_tuesday = today - timedelta(days=today.weekday() - 1)
-                tuesdays.append(last_tuesday)
+                if last_tuesday not in tuesdays:
+                    tuesdays.append(last_tuesday)
                 tuesdays.append(today)
+
+            # Assicurati che le date siano ordinate e non ci siano duplicati
+            tuesdays = sorted(set(tuesdays))
 
             for i in range(len(tuesdays) - 1):
                 start_date = tuesdays[i]
                 end_date = tuesdays[i + 1]
+
+                # Verifica che start_date e end_date siano diverse
+                if start_date == end_date:
+                    continue
 
                 start_balance = Balance.objects.filter(fund=fund, date=start_date).first()
                 end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
@@ -334,6 +349,7 @@ class MetricService:
                 logger.info(f"Weekly performance for {fund.name} from {start_date} to {end_date}: {weekly_performance}%")
         except Exception as e:
             logger.error(f"Error calculating weekly performance for {fund.name}: {e}")
+
 
     def calculate_monthly_performance_for_fund(self, fund):
         try:
