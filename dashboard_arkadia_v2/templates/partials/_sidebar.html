@@ -20,7 +20,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link d-flex align-items-center gap-2 {% if request.path == '/dashboard/reports/' %}active{% endif %}" href="#">
+          <a class="nav-link d-flex align-items-center gap-2 {% if request.path == '/dashboard/reports/' %}active{% endif %}" href="{% url 'reports' %}">
             <i class="bi bi-graph-up"></i>
             Reports
           </a>

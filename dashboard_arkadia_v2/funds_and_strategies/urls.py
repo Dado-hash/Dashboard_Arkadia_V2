@@ -13,4 +13,5 @@ urlpatterns = [
     path('settings/', views.settings, name='settings'),
     path('funds/', views.funds, name='funds'),
     path('funds/<int:fund_id>/strategies/', views.strategies, name='strategies'),
+    path('reports/', views.reports, name='reports'),
 ]

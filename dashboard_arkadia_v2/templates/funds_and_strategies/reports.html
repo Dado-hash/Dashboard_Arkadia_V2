@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Selettore del Fondo -->
+    <div class="row mt-2">
+        <div class="col-md-4 offset-md-4">
+            <form method="get">
+                <div class="form-group">
+                    <label for="fundSelector">Select Fund:</label>
+                    <select id="fundSelector" name="fund" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Select Fund --</option>
+                        {% for fund in funds %}
+                            <option value="{{ fund.id }}" {% if fund == selected_fund %}selected{% endif %}>{{ fund.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Performance del Fondo -->
+    {% if selected_fund %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4>Performance for {{ selected_fund.name }}</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Performance Type</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>YTD</td>
+                        <td class="{% if fund_performance.ytd and fund_performance.ytd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ fund_performance.ytd.value|default:"N/A" }}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>MTD</td>
+                        <td class="{% if fund_performance.mtd and fund_performance.mtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ fund_performance.mtd.value|default:"N/A" }}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>WTD</td>
+                        <td class="{% if fund_performance.wtd and fund_performance.wtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ fund_performance.wtd.value|default:"N/A" }}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Latest Balance (USD):</strong> {{ fund_performance.latest_balance.value_usd|default:"N/A" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Performance delle Strategie -->
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <h4>Strategy Performances</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>YTD</th>
+                        <th>MTD</th>
+                        <th>WTD</th>
+                        <th>Latest Balance (USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sp in strategy_performance %}
+                    <tr>
+                        <td>{{ sp.strategy.name }}</td>
+                        <td class="{% if sp.ytd and sp.ytd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ sp.ytd.value|default:"N/A" }}%
+                        </td>
+                        <td class="{% if sp.mtd and sp.mtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ sp.mtd.value|default:"N/A" }}%
+                        </td>
+                        <td class="{% if sp.wtd and sp.wtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ sp.wtd.value|default:"N/A" }}%
+                        </td>
+                        <td>{{ sp.latest_balance.value_usd|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

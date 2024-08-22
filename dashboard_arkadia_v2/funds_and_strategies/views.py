@@ -293,3 +293,36 @@ def strategies(request, fund_id):
         'strategies_data': json.dumps(strategies_data), 
     }
     return render(request, 'funds_and_strategies/strategies.html', context)
+
+def reports(request):
+    funds = Fund.objects.all()
+    selected_fund_id = request.GET.get('fund', None)
+    selected_fund = Fund.objects.get(id=selected_fund_id) if selected_fund_id else None
+    
+    fund_performance = {
+        'ytd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="annual_performance").last(),
+        'mtd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="monthly_performance").last(),
+        'wtd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="weekly_performance").last(),
+        'latest_balance': Balance.objects.filter(fund=selected_fund).order_by('-date').first(),
+    } if selected_fund else {}
+
+    strategy_performance = []
+    if selected_fund:
+        strategies = Strategy.objects.filter(fund=selected_fund)
+        for strategy in strategies:
+            strategy_performance.append({
+                'strategy': strategy,
+                'ytd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="annual_performance").last(),
+                'mtd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="monthly_performance").last(),
+                'wtd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="weekly_performance").last(),
+                'latest_balance': Balance.objects.filter(strategy=strategy).order_by('-date').first(),
+            })
+
+    context = {
+        'funds': funds,
+        'selected_fund': selected_fund,
+        'fund_performance': fund_performance,
+        'strategy_performance': strategy_performance,
+    }
+    
+    return render(request, 'funds_and_strategies/reports.html', context)
