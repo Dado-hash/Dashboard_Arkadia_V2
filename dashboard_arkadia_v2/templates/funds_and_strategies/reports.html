@@ -5,17 +5,24 @@
 {% block content %}
 <div class="container mt-4">
 
-    <!-- Selettore del Fondo -->
+    <!-- Selettore del Fondo e della Valuta -->
     <div class="row mt-2">
-        <div class="col-md-4 offset-md-4">
-            <form method="get">
-                <div class="form-group">
+        <div class="col-md-6 offset-md-3">
+            <form method="get" class="d-flex justify-content-center">
+                <div class="form-group me-3">
                     <label for="fundSelector">Select Fund:</label>
                     <select id="fundSelector" name="fund" class="form-control" onchange="this.form.submit()">
                         <option value="">-- Select Fund --</option>
                         {% for fund in funds %}
                             <option value="{{ fund.id }}" {% if fund == selected_fund %}selected{% endif %}>{{ fund.name }}</option>
                         {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="currencySelector">Select Currency:</label>
+                    <select id="currencySelector" name="currency" class="form-control" onchange="this.form.submit()">
+                        <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>USD</option>
+                        <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>EUR</option>
                     </select>
                 </div>
             </form>
@@ -31,30 +38,48 @@
                 <thead>
                     <tr>
                         <th>Performance Type</th>
-                        <th>Value</th>
+                        <th>Value ({{ selected_currency }})</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>YTD</td>
-                        <td class="{% if fund_performance.ytd and fund_performance.ytd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ fund_performance.ytd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and fund_performance.ytd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.ytd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ fund_performance.ytd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ fund_performance.ytd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
                         <td>MTD</td>
-                        <td class="{% if fund_performance.mtd and fund_performance.mtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ fund_performance.mtd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and fund_performance.mtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.mtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ fund_performance.mtd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ fund_performance.mtd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
                         <td>WTD</td>
-                        <td class="{% if fund_performance.wtd and fund_performance.wtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ fund_performance.wtd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and fund_performance.wtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.wtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ fund_performance.wtd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ fund_performance.wtd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2"><strong>Latest Balance (USD):</strong> {{ fund_performance.latest_balance.value_usd|default:"N/A" }}</td>
+                        <td colspan="2"><strong>Latest Balance ({{ selected_currency }}):</strong> 
+                            {% if selected_currency == 'USD' %}
+                                {{ fund_performance.latest_balance.value_usd|default:"N/A" }}
+                            {% else %}
+                                {{ fund_performance.latest_balance.value_eur|default:"N/A" }}
+                            {% endif %}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -72,23 +97,41 @@
                         <th>YTD</th>
                         <th>MTD</th>
                         <th>WTD</th>
-                        <th>Latest Balance (USD)</th>
+                        <th>Latest Balance ({{ selected_currency }})</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for sp in strategy_performance %}
                     <tr>
                         <td>{{ sp.strategy.name }}</td>
-                        <td class="{% if sp.ytd and sp.ytd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ sp.ytd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and sp.ytd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.ytd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ sp.ytd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ sp.ytd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
-                        <td class="{% if sp.mtd and sp.mtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ sp.mtd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and sp.mtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.mtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ sp.mtd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ sp.mtd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
-                        <td class="{% if sp.wtd and sp.wtd.value >= 0 %}text-success{% else %}text-danger{% endif %}">
-                            {{ sp.wtd.value|default:"N/A" }}%
+                        <td class="{% if selected_currency == 'USD' and sp.wtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.wtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if selected_currency == 'USD' %}
+                                {{ sp.wtd.value|default:"N/A" }}%
+                            {% else %}
+                                {{ sp.wtd.value_eur|default:"N/A" }}%
+                            {% endif %}
                         </td>
-                        <td>{{ sp.latest_balance.value_usd|default:"N/A" }}</td>
+                        <td>
+                            {% if selected_currency == 'USD' %}
+                                {{ sp.latest_balance.value_usd|default:"N/A" }}
+                            {% else %}
+                                {{ sp.latest_balance.value_eur|default:"N/A" }}
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
