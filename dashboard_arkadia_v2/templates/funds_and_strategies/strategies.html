@@ -5,11 +5,11 @@
 {% block content %}
 <div class="container mt-4">
     
-    <!-- Selettori della Strategia e della Metrica -->
+    <!-- Selettori della Strategia, della Metrica e della Valuta -->
     <div class="row mt-4">
         <div class="col-md-2 d-flex justify-content-center align-items-center">
             <div id="latestValue" class="alert alert-info text-center" role="alert">
-                Latest Value: <span id="latestValueText">N/A</span>
+                Actual: <span id="latestValueText">N/A</span>
             </div>
         </div>
         <div class="col-md-2">
@@ -29,6 +29,13 @@
                 <option value="monthly_performance">Monthly Performance</option>
                 <option value="annual_performance">Annual Performance</option>
                 <option value="cumulative_performance">Cumulative Performance</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="currencySelector" class="form-label">Select Currency:</label>
+            <select id="currencySelector" class="form-select mb-3">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
             </select>
         </div>
     </div>
@@ -69,11 +76,12 @@
         var strategies = JSON.parse('{{ strategies_data|escapejs }}');
         var strategySelector = document.getElementById('strategySelector');
         var metricSelector = document.getElementById('metricSelector');
+        var currencySelector = document.getElementById('currencySelector');
         var ctx = document.getElementById('strategyPerformanceChart').getContext('2d');
         var chart;
         var latestValueText = document.getElementById('latestValueText');
 
-        function updateChart(strategyId, metric) {
+        function updateChart(strategyId, metric, currency) {
             var strategy = strategies.find(s => s.id === parseInt(strategyId));
             if (strategy) {
                 var labels = [];
@@ -83,38 +91,39 @@
                 var backgroundColors = [];
                 var latestValue = 'N/A';
 
+                // Modifica i dati in base alla valuta selezionata
                 if (metric === 'balance') {
                     labels = strategy.balance_labels;
-                    data = strategy.balance_values;
-                    label = strategy.name + ' Balance (USD)';
+                    data = currency === 'USD' ? strategy.balance_values : strategy.balance_values_eur;
+                    label = strategy.name + ' Balance (' + currency + ')';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'daily_performance') {
                     labels = strategy.daily_labels;
-                    data = strategy.daily_values;
+                    data = currency === 'USD' ? strategy.daily_values : strategy.daily_values_eur;
                     label = strategy.name + ' Daily Performance (%)';
                     chartType = 'bar';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'weekly_performance') {
                     labels = strategy.weekly_labels;
-                    data = strategy.weekly_values;
+                    data = currency === 'USD' ? strategy.weekly_values : strategy.weekly_values_eur;
                     label = strategy.name + ' Weekly Performance (%)';
                     chartType = 'bar';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'monthly_performance') {
                     labels = strategy.monthly_labels;
-                    data = strategy.monthly_values;
+                    data = currency === 'USD' ? strategy.monthly_values : strategy.monthly_values_eur;
                     label = strategy.name + ' Monthly Performance (%)';
                     chartType = 'bar';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'annual_performance') {
                     labels = strategy.annual_labels;
-                    data = strategy.annual_values;
+                    data = currency === 'USD' ? strategy.annual_values : strategy.annual_values_eur;
                     label = strategy.name + ' Annual Performance (%)';
                     chartType = 'bar';
                     latestValue = data[data.length - 1] || 'N/A';
                 } else if (metric === 'cumulative_performance') {
                     labels = strategy.cumulative_labels;
-                    data = strategy.cumulative_values;
+                    data = currency === 'USD' ? strategy.cumulative_values : strategy.cumulative_values_eur;
                     label = strategy.name + ' Cumulative Performance (%)';
                     latestValue = data[data.length - 1] || 'N/A';
                 }
@@ -174,7 +183,7 @@
 
                     nameCell.textContent = asset.name;
                     amountCell.textContent = asset.amount.toFixed(2);
-                    valueCell.textContent = asset.value_usd.toFixed(2);
+                    valueCell.textContent = asset.value_usd.toFixed(2);  // Questo valore è sempre in USD
                     percentageCell.textContent = asset.percentage.toFixed(2) + '%';
 
                     row.appendChild(nameCell);
@@ -188,16 +197,20 @@
         }
 
         strategySelector.addEventListener('change', function() {
-            updateChart(this.value, metricSelector.value);
+            updateChart(this.value, metricSelector.value, currencySelector.value);
         });
 
         metricSelector.addEventListener('change', function() {
-            updateChart(strategySelector.value, this.value);
+            updateChart(strategySelector.value, this.value, currencySelector.value);
+        });
+
+        currencySelector.addEventListener('change', function() {
+            updateChart(strategySelector.value, metricSelector.value, this.value);
         });
 
         // Initial load
         if (strategies.length > 0) {
-            updateChart(strategySelector.value, metricSelector.value);
+            updateChart(strategySelector.value, metricSelector.value, currencySelector.value);
         }
     });
 </script>
