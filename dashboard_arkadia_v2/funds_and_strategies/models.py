@@ -47,6 +47,7 @@ class Balance(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE, null=True, blank=True)
     fund = models.ForeignKey(Fund, on_delete=models.CASCADE, null=True, blank=True)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    value_eur = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
 
@@ -70,6 +71,7 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     price = models.DecimalField(max_digits=20, decimal_places=2)
     value_usd = models.DecimalField(max_digits=20, decimal_places=2)
+    value_eur = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
     strategy = models.ForeignKey(Strategy, null=True, blank=True, on_delete=models.SET_NULL)
     fund = models.ForeignKey(Fund, null=True, blank=True, on_delete=models.SET_NULL)
@@ -90,6 +92,7 @@ class PerformanceMetric(models.Model):
     date = models.DateField()
     metric_name = models.CharField(max_length=255)
     value = models.DecimalField(max_digits=20, decimal_places=2)
+    value_eur = models.DecimalField(max_digits=20, decimal_places=2)
 
     def __str__(self):
         return f"{self.strategy.name if self.strategy else self.fund.name} - {self.metric_name} - {self.date}"

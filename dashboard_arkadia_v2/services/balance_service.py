@@ -1,8 +1,8 @@
-import logging
-from datetime import date
 from django.utils import timezone
-from funds_and_strategies.models import Asset, Balance, Strategy, Fund
+from funds_and_strategies.models import Asset, Balance, Strategy, Fund, ExchangeRate
 from django.db.models import Sum
+from datetime import date
+import logging
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -11,19 +11,28 @@ logger = logging.getLogger(__name__)
 class BalanceService:
     def calculate_strategy_balance_for_date(self, strategy, balance_date):
         try:
+            # Calcola il valore totale in USD
             total_value_usd = Asset.objects.filter(strategy=strategy, date=balance_date).aggregate(total_value=Sum('value_usd'))['total_value'] or 0.0
-            if total_value_usd is None:
-                total_value_usd = 0.0
-
+            
+            # Recupera il tasso di cambio per la data specifica
+            exchange_rate = ExchangeRate.objects.filter(from_currency='EUR', to_currency='USD', date=balance_date).first()
+            
+            if exchange_rate:
+                total_value_eur = total_value_usd / exchange_rate.rate
+            else:
+                total_value_eur = None
+            
+            # Salva il bilancio in USD ed EUR
             balance, created = Balance.objects.update_or_create(
                 strategy=strategy,
                 date=balance_date,
                 defaults={
                     'value_usd': total_value_usd,
+                    'value_eur': total_value_eur,
                     'last_updated': timezone.now()
                 }
             )
-            logger.info(f"Saved balance for {strategy.name} on {balance_date} with value {total_value_usd}.")
+            logger.info(f"Saved balance for {strategy.name} on {balance_date} with value USD {total_value_usd} and EUR {total_value_eur}.")
             return balance
         except Exception as e:
             logger.error(f"Error calculating balance for {strategy.name} on {balance_date}: {e}")
@@ -32,18 +41,26 @@ class BalanceService:
         try:
             strategies = Strategy.objects.filter(fund=fund)
             total_value_usd = Balance.objects.filter(strategy__in=strategies, date=balance_date).aggregate(total_value=Sum('value_usd'))['total_value'] or 0.0
-            if total_value_usd is None:
-                total_value_usd = 0.0
-
+            
+            # Recupera il tasso di cambio per la data specifica
+            exchange_rate = ExchangeRate.objects.filter(from_currency='EUR', to_currency='USD', date=balance_date).first()
+            
+            if exchange_rate:
+                total_value_eur = total_value_usd / exchange_rate.rate
+            else:
+                total_value_eur = None  # Puoi decidere come gestire l'assenza di un tasso di cambio
+            
+            # Salva il bilancio in USD ed EUR
             balance, created = Balance.objects.update_or_create(
                 fund=fund,
                 date=balance_date,
                 defaults={
                     'value_usd': total_value_usd,
+                    'value_eur': total_value_eur,
                     'last_updated': timezone.now()
                 }
             )
-            logger.info(f"Saved balance for {fund.name} on {balance_date} with value {total_value_usd}.")
+            logger.info(f"Saved balance for {fund.name} on {balance_date} with value USD {total_value_usd} and EUR {total_value_eur}.")
             return balance
         except Exception as e:
             logger.error(f"Error calculating balance for {fund.name} on {balance_date}: {e}")

@@ -18,19 +18,19 @@ class AssetAdmin(admin.ModelAdmin):
     ordering = ('date',)
 
 class BalanceAdmin(admin.ModelAdmin):
-    list_display = ('strategy_or_fund', 'value_usd', 'date')
+    list_display = ('strategy_or_fund', 'value_usd', 'value_eur', 'date')
     search_fields = ('strategy__name', 'fund__name')
     list_filter = ('strategy', 'fund', 'date')
     ordering = ('date',)
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('type', 'asset', 'amount', 'value_usd', 'date', 'strategy_or_fund')
+    list_display = ('type', 'asset', 'amount', 'value_usd', 'value_eur', 'date', 'strategy_or_fund')
     search_fields = ('type', 'strategy__name')
     list_filter = ('type', 'strategy', 'date')
     ordering = ('date',)
 
 class PerformanceMetricAdmin(admin.ModelAdmin):
-    list_display = ('strategy_or_fund', 'date', 'metric_name', 'value')
+    list_display = ('strategy_or_fund', 'date', 'metric_name', 'value', 'value_eur')
     search_fields = ('strategy__name', 'fund__name', 'metric_name')
     list_filter = ('strategy', 'fund', 'date', 'metric_name')
     ordering = ('date',)

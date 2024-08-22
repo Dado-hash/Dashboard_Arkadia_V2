@@ -9,28 +9,41 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class MetricService:
+
     def calculate_daily_performance(self, strategy, balance_date):
         try:
             current_balance = Balance.objects.filter(strategy=strategy, date=balance_date).first()
             previous_balance_date = balance_date - timedelta(days=1)
             previous_balance = Balance.objects.filter(strategy=strategy, date=previous_balance_date).first()
 
-            deposits = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits_usd = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals_usd = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+
+            deposits_eur = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+            withdrawals_eur = Transaction.objects.filter(strategy=strategy, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
 
             if previous_balance and current_balance and previous_balance.value_usd > Decimal('0.0'):
-                adjusted_previous_value = Decimal(previous_balance.value_usd) + deposits - withdrawals
-                performance = ((Decimal(current_balance.value_usd) - adjusted_previous_value) / adjusted_previous_value) * Decimal('100.0')
+                adjusted_previous_value_usd = Decimal(previous_balance.value_usd) + deposits_usd - withdrawals_usd
+                performance_usd = ((Decimal(current_balance.value_usd) - adjusted_previous_value_usd) / adjusted_previous_value_usd) * Decimal('100.0')
             else:
-                performance = Decimal('0.0')
+                performance_usd = Decimal('0.0')
+
+            if previous_balance and current_balance and previous_balance.value_eur > Decimal('0.0'):
+                adjusted_previous_value_eur = Decimal(previous_balance.value_eur) + deposits_eur - withdrawals_eur
+                performance_eur = ((Decimal(current_balance.value_eur) - adjusted_previous_value_eur) / adjusted_previous_value_eur) * Decimal('100.0')
+            else:
+                performance_eur = Decimal('0.0')
 
             PerformanceMetric.objects.update_or_create(
                 strategy=strategy,
                 date=balance_date,
                 metric_name="daily_performance",
-                defaults={'value': performance}
+                defaults={
+                    'value': performance_usd,
+                    'value_eur': performance_eur,
+                }
             )
-            logger.info(f"Daily performance for {strategy.name} on {balance_date}: {performance}%")
+            logger.info(f"Daily performance for {strategy.name} on {balance_date}: {performance_usd}% (USD), {performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating daily performance for {strategy.name} on {balance_date}: {e}")
 
@@ -43,28 +56,49 @@ class MetricService:
 
             current_balance = Balance.objects.filter(strategy=strategy, date=balance_date).first()
 
-            deposits = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits_usd = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals_usd = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+
+            deposits_eur = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+            withdrawals_eur = Transaction.objects.filter(strategy=strategy, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
 
             if initial_balance and current_balance and initial_balance.value_usd > Decimal('0.0'):
-                adjusted_initial_value = Decimal(initial_balance.value_usd) + deposits - withdrawals
-                performance = ((Decimal(current_balance.value_usd) - adjusted_initial_value) / adjusted_initial_value) * Decimal('100.0')
+                adjusted_initial_value_usd = Decimal(initial_balance.value_usd) + deposits_usd - withdrawals_usd
+                performance_usd = ((Decimal(current_balance.value_usd) - adjusted_initial_value_usd) / adjusted_initial_value_usd) * Decimal('100.0')
             else:
-                performance = Decimal('0.0')
+                performance_usd = Decimal('0.0')
+
+            if initial_balance and current_balance and initial_balance.value_eur > Decimal('0.0'):
+                adjusted_initial_value_eur = Decimal(initial_balance.value_eur) + deposits_eur - withdrawals_eur
+                performance_eur = ((Decimal(current_balance.value_eur) - adjusted_initial_value_eur) / adjusted_initial_value_eur) * Decimal('100.0')
+            else:
+                performance_eur = Decimal('0.0')
 
             PerformanceMetric.objects.update_or_create(
                 strategy=strategy,
                 date=balance_date,
                 metric_name="cumulative_performance",
-                defaults={'value': performance}
+                defaults={
+                    'value': performance_usd,
+                    'value_eur': performance_eur,
+                }
             )
-            logger.info(f"Cumulative performance for {strategy.name} on {balance_date}: {performance}%")
+            logger.info(f"Cumulative performance for {strategy.name} on {balance_date}: {performance_usd}% (USD), {performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating cumulative performance for {strategy.name} on {balance_date}: {e}")
 
     def get_last_tuesday(self, reference_date):
         last_tuesday = reference_date - timedelta(days=(reference_date.weekday() - 1) % 7)
         return last_tuesday
+    
+    def remove_duplicates_preserve_order(self, lst):
+        seen = set()
+        unique_lst = []
+        for item in lst:
+            if item not in seen:
+                unique_lst.append(item)
+                seen.add(item)
+        return unique_lst
     
     def calculate_weekly_performance(self, strategy):
         try:
@@ -96,24 +130,35 @@ class MetricService:
                 end_balance = Balance.objects.filter(strategy=strategy, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    weekly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    weekly_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    weekly_performance = Decimal('0.0')
+                    weekly_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    weekly_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    weekly_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     strategy=strategy,
                     date=end_date,
                     metric_name="weekly_performance",
-                    defaults={'value': weekly_performance}
+                    defaults={
+                        'value': weekly_performance_usd,
+                        'value_eur': weekly_performance_eur,
+                    }
                 )
-                logger.info(f"Weekly performance for {strategy.name} from {start_date} to {end_date}: {weekly_performance}%")
+                logger.info(f"Weekly performance for {strategy.name} from {start_date} to {end_date}: {weekly_performance_usd}% (USD), {weekly_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating weekly performance for {strategy.name}: {e}")
-
 
 
     def get_last_friday_of_month(self, year, month):
@@ -161,23 +206,36 @@ class MetricService:
                 end_balance = Balance.objects.filter(strategy=strategy, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    monthly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    monthly_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    monthly_performance = Decimal('0.0')
+                    monthly_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    monthly_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    monthly_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     strategy=strategy,
                     date=end_date,
                     metric_name="monthly_performance",
-                    defaults={'value': monthly_performance}
+                    defaults={
+                        'value': monthly_performance_usd,
+                        'value_eur': monthly_performance_eur,
+                    }
                 )
-                logger.info(f"Monthly performance for {strategy.name} on {end_date}: {monthly_performance}%")
+                logger.info(f"Monthly performance for {strategy.name} on {end_date}: {monthly_performance_usd}% (USD), {monthly_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating monthly performance for {strategy.name}: {e}")
+
 
     def get_last_friday_of_year(self, year):
         last_day_of_year = datetime(year, 12, 31)
@@ -193,13 +251,14 @@ class MetricService:
             last_fridays = []
             today = date.today()
 
-            for date in balance_dates:
-                year = date.year
+            for balance_date in balance_dates:
+                year = balance_date.year
                 last_friday = self.get_last_friday_of_year(year)
                 last_fridays.append(last_friday)
 
-            # Aggiungi l'ultimo venerdì dell'anno in corso o la data odierna come provvisoria
             current_year_last_friday = self.get_last_friday_of_year(today.year)
+
+            last_fridays = self.remove_duplicates_preserve_order(last_fridays)
 
             if today < current_year_last_friday:
                 last_fridays.append(today)
@@ -216,24 +275,35 @@ class MetricService:
                 end_balance = Balance.objects.filter(strategy=strategy, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    annual_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    annual_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    annual_performance = Decimal('0.0')
+                    annual_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(strategy=strategy, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    annual_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    annual_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     strategy=strategy,
                     date=end_date,
                     metric_name="annual_performance",
-                    defaults={'value': annual_performance}
+                    defaults={
+                        'value': annual_performance_usd,
+                        'value_eur': annual_performance_eur,
+                    }
                 )
-                logger.info(f"Annual performance for {strategy.name} from {start_date} to {end_date}: {annual_performance}%")
+                logger.info(f"Annual performance for {strategy.name} from {start_date} to {end_date}: {annual_performance_usd}% (USD), {annual_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating annual performance for {strategy.name}: {e}")
-
 
     def calculate_performances_for_strategy(self, strategy):
         try:
@@ -253,22 +323,38 @@ class MetricService:
             previous_balance_date = balance_date - timedelta(days=1)
             previous_balance = Balance.objects.filter(fund=fund, date=previous_balance_date).first()
 
-            deposits = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits_usd = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals_usd = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-            if previous_balance and current_balance and previous_balance.value_usd > Decimal('0.0'):
-                adjusted_previous_value = Decimal(previous_balance.value_usd) + deposits - withdrawals
-                performance = ((Decimal(current_balance.value_usd) - adjusted_previous_value) / adjusted_previous_value) * Decimal('100.0')
+            deposits_eur = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+            withdrawals_eur = Transaction.objects.filter(fund=fund, date__gt=previous_balance_date, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+            if previous_balance and current_balance:
+                if previous_balance.value_usd > Decimal('0.0'):
+                    adjusted_previous_value_usd = Decimal(previous_balance.value_usd) + deposits_usd - withdrawals_usd
+                    performance_usd = ((Decimal(current_balance.value_usd) - adjusted_previous_value_usd) / adjusted_previous_value_usd) * Decimal('100.0')
+                else:
+                    performance_usd = Decimal('0.0')
+
+                if previous_balance.value_eur > Decimal('0.0'):
+                    adjusted_previous_value_eur = Decimal(previous_balance.value_eur) + deposits_eur - withdrawals_eur
+                    performance_eur = ((Decimal(current_balance.value_eur) - adjusted_previous_value_eur) / adjusted_previous_value_eur) * Decimal('100.0')
+                else:
+                    performance_eur = Decimal('0.0')
             else:
-                performance = Decimal('0.0')
+                performance_usd = Decimal('0.0')
+                performance_eur = Decimal('0.0')
 
             PerformanceMetric.objects.update_or_create(
                 fund=fund,
                 date=balance_date,
                 metric_name="daily_performance",
-                defaults={'value': performance}
+                defaults={
+                    'value': performance_usd,
+                    'value_eur': performance_eur,
+                }
             )
-            logger.info(f"Daily performance for {fund.name} on {balance_date}: {performance}%")
+            logger.info(f"Daily performance for {fund.name} on {balance_date}: {performance_usd}% (USD), {performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating daily performance for {fund.name} on {balance_date}: {e}")
 
@@ -281,22 +367,38 @@ class MetricService:
 
             current_balance = Balance.objects.filter(fund=fund, date=balance_date).first()
 
-            deposits = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-            withdrawals = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+            deposits_usd = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+            withdrawals_usd = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-            if initial_balance and current_balance and initial_balance.value_usd > Decimal('0.0'):
-                adjusted_initial_value = Decimal(initial_balance.value_usd) + deposits - withdrawals
-                performance = ((Decimal(current_balance.value_usd) - adjusted_initial_value) / adjusted_initial_value) * Decimal('100.0')
+            deposits_eur = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+            withdrawals_eur = Transaction.objects.filter(fund=fund, date__lte=balance_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+            if initial_balance and current_balance:
+                if initial_balance.value_usd > Decimal('0.0'):
+                    adjusted_initial_value_usd = Decimal(initial_balance.value_usd) + deposits_usd - withdrawals_usd
+                    performance_usd = ((Decimal(current_balance.value_usd) - adjusted_initial_value_usd) / adjusted_initial_value_usd) * Decimal('100.0')
+                else:
+                    performance_usd = Decimal('0.0')
+
+                if initial_balance.value_eur > Decimal('0.0'):
+                    adjusted_initial_value_eur = Decimal(initial_balance.value_eur) + deposits_eur - withdrawals_eur
+                    performance_eur = ((Decimal(current_balance.value_eur) - adjusted_initial_value_eur) / adjusted_initial_value_eur) * Decimal('100.0')
+                else:
+                    performance_eur = Decimal('0.0')
             else:
-                performance = Decimal('0.0')
+                performance_usd = Decimal('0.0')
+                performance_eur = Decimal('0.0')
 
             PerformanceMetric.objects.update_or_create(
                 fund=fund,
                 date=balance_date,
                 metric_name="cumulative_performance",
-                defaults={'value': performance}
+                defaults={
+                    'value': performance_usd,
+                    'value_eur': performance_eur,
+                }
             )
-            logger.info(f"Cumulative performance for {fund.name} on {balance_date}: {performance}%")
+            logger.info(f"Cumulative performance for {fund.name} on {balance_date}: {performance_usd}% (USD), {performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating cumulative performance for {fund.name} on {balance_date}: {e}")
 
@@ -317,14 +419,12 @@ class MetricService:
                     tuesdays.append(last_tuesday)
                 tuesdays.append(today)
 
-            # Assicurati che le date siano ordinate e non ci siano duplicati
             tuesdays = sorted(set(tuesdays))
 
             for i in range(len(tuesdays) - 1):
                 start_date = tuesdays[i]
                 end_date = tuesdays[i + 1]
 
-                # Verifica che start_date e end_date siano diverse
                 if start_date == end_date:
                     continue
 
@@ -332,24 +432,35 @@ class MetricService:
                 end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    weekly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    weekly_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    weekly_performance = Decimal('0.0')
+                    weekly_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    weekly_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    weekly_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     fund=fund,
                     date=end_date,
                     metric_name="weekly_performance",
-                    defaults={'value': weekly_performance}
+                    defaults={
+                        'value': weekly_performance_usd,
+                        'value_eur': weekly_performance_eur,
+                    }
                 )
-                logger.info(f"Weekly performance for {fund.name} from {start_date} to {end_date}: {weekly_performance}%")
+                logger.info(f"Weekly performance for {fund.name} from {start_date} to {end_date}: {weekly_performance_usd}% (USD), {weekly_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating weekly performance for {fund.name}: {e}")
-
 
     def calculate_monthly_performance_for_fund(self, fund):
         try:
@@ -387,21 +498,33 @@ class MetricService:
                 end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    monthly_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    monthly_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    monthly_performance = Decimal('0.0')
+                    monthly_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    monthly_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    monthly_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     fund=fund,
                     date=end_date,
                     metric_name="monthly_performance",
-                    defaults={'value': monthly_performance}
+                    defaults={
+                        'value': monthly_performance_usd,
+                        'value_eur': monthly_performance_eur,
+                    }
                 )
-                logger.info(f"Monthly performance for {fund.name} on {end_date}: {monthly_performance}%")
+                logger.info(f"Monthly performance for {fund.name} on {end_date}: {monthly_performance_usd}% (USD), {monthly_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating monthly performance for {fund.name}: {e}")
 
@@ -414,25 +537,22 @@ class MetricService:
             last_fridays = []
             today = date.today()
 
-            # Aggiunta dei venerdì degli anni passati
             for balance_date in balance_dates:
                 year = balance_date.year
                 last_friday = self.get_last_friday_of_year(year)
-                if last_friday not in last_fridays:
-                    last_fridays.append(last_friday)
+                last_fridays.append(last_friday)
 
             current_year_last_friday = self.get_last_friday_of_year(today.year)
 
-            # Gestione del caso year-to-date
+            last_fridays = self.remove_duplicates_preserve_order(last_fridays)
+
             if today < current_year_last_friday:
-                # Sostituisci l'ultimo venerdì dell'anno in corso con oggi se siamo prima dell'ultimo venerdì
                 last_fridays.append(today)
                 last_fridays[-2], last_fridays[-1] = last_fridays[-1], last_fridays[-2]
                 last_fridays.pop()
             else:
                 last_fridays.append(current_year_last_friday)
 
-            # Calcolo della performance annuale per ogni coppia di date
             for i in range(len(last_fridays) - 1):
                 start_date = last_fridays[i]
                 end_date = last_fridays[i + 1]
@@ -441,21 +561,33 @@ class MetricService:
                 end_balance = Balance.objects.filter(fund=fund, date=end_date).first()
 
                 if start_balance and end_balance and start_balance.value_usd > Decimal('0.0'):
-                    deposits = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
-                    withdrawals = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
+                    deposits_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_usd'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_usd = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_usd'))['total_withdrawals'] or Decimal('0.0')
 
-                    adjusted_start_value = Decimal(start_balance.value_usd) + deposits - withdrawals
-                    annual_performance = ((Decimal(end_balance.value_usd) - adjusted_start_value) / adjusted_start_value) * Decimal('100.0')
+                    adjusted_start_value_usd = Decimal(start_balance.value_usd) + deposits_usd - withdrawals_usd
+                    annual_performance_usd = ((Decimal(end_balance.value_usd) - adjusted_start_value_usd) / adjusted_start_value_usd) * Decimal('100.0')
                 else:
-                    annual_performance = Decimal('0.0')
+                    annual_performance_usd = Decimal('0.0')
+
+                if start_balance and end_balance and start_balance.value_eur > Decimal('0.0'):
+                    deposits_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='deposit').aggregate(total_deposits=Sum('value_eur'))['total_deposits'] or Decimal('0.0')
+                    withdrawals_eur = Transaction.objects.filter(fund=fund, date__gt=start_date, date__lte=end_date, type='withdrawal').aggregate(total_withdrawals=Sum('value_eur'))['total_withdrawals'] or Decimal('0.0')
+
+                    adjusted_start_value_eur = Decimal(start_balance.value_eur) + deposits_eur - withdrawals_eur
+                    annual_performance_eur = ((Decimal(end_balance.value_eur) - adjusted_start_value_eur) / adjusted_start_value_eur) * Decimal('100.0')
+                else:
+                    annual_performance_eur = Decimal('0.0')
 
                 PerformanceMetric.objects.update_or_create(
                     fund=fund,
                     date=end_date,
                     metric_name="annual_performance",
-                    defaults={'value': annual_performance}
+                    defaults={
+                        'value': annual_performance_usd,
+                        'value_eur': annual_performance_eur,
+                    }
                 )
-                logger.info(f"Annual performance for {fund.name} from {start_date} to {end_date}: {annual_performance}%")
+                logger.info(f"Annual performance for {fund.name} from {start_date} to {end_date}: {annual_performance_usd}% (USD), {annual_performance_eur}% (EUR)")
         except Exception as e:
             logger.error(f"Error calculating annual performance for {fund.name}: {e}")
 

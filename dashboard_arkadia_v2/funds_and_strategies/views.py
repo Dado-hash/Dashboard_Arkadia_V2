@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 import requests
 from services.update_assets import update_all_assets
-from .models import Asset, Balance, Fund, PerformanceMetric, Strategy, Transaction
+from .models import Asset, Balance, ExchangeRate, Fund, PerformanceMetric, Strategy, Transaction
 from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, TransactionFormSet, WalletForm
 from django.db.models import Sum, Max
 
@@ -152,7 +152,20 @@ def add_transactions(request):
             instances = formset.save(commit=False)
             for instance in instances:
                 instance.value_usd = instance.amount * instance.price
+                
+                exchange_rate = ExchangeRate.objects.filter(from_currency='EUR', to_currency='USD', date=instance.date).first()
+                
+                if exchange_rate:
+                    instance.value_eur = instance.value_usd / exchange_rate.rate
+                else:
+                    latest_exchange_rate = ExchangeRate.objects.filter(from_currency='EUR', to_currency='USD').order_by('-date').first()
+                    if latest_exchange_rate:
+                        instance.value_eur = instance.value_usd / latest_exchange_rate.rate
+                    else:
+                        instance.value_eur = None
+
                 instance.save()
+                
             messages.success(request, 'Transactions added successfully!')
             return redirect('add_transactions')
     else:
@@ -208,16 +221,22 @@ def funds(request):
             'name': fund.name,
             'balance_labels': [item.date.strftime('%Y-%m-%d') for item in balance_data],
             'balance_values': [float(item.value_usd) for item in balance_data], 
+            'balance_values_eur': [float(item.value_eur) for item in balance_data], 
             'daily_labels': [item.date.strftime('%Y-%m-%d') for item in daily_performance_data],
             'daily_values': [float(item.value) for item in daily_performance_data], 
+            'daily_values_eur': [float(item.value_eur) for item in daily_performance_data], 
             'weekly_labels': [item.date.strftime('%Y-%m-%d') for item in weekly_performance_data],
             'weekly_values': [float(item.value) for item in weekly_performance_data],
+            'weekly_values_eur': [float(item.value_eur) for item in weekly_performance_data], 
             'monthly_labels': [item.date.strftime('%Y-%m') for item in monthly_performance_data],
             'monthly_values': [float(item.value) for item in monthly_performance_data], 
+            'monthly_values_eur': [float(item.value_eur) for item in monthly_performance_data],  
             'annual_labels': [item.date.strftime('%Y') for item in annual_performance_data],
             'annual_values': [float(item.value) for item in annual_performance_data],
+            'annual_values_eur': [float(item.value_eur) for item in annual_performance_data], 
             'cumulative_labels': [item.date.strftime('%Y-%m-%d') for item in cumulative_performance_data],
             'cumulative_values': [float(item.value) for item in cumulative_performance_data],
+            'cumulative_values_eur': [float(item.value_eur) for item in cumulative_performance_data], 
             'asset_allocation': asset_allocation_data,
         }
 
