@@ -8,26 +8,36 @@
     <!-- Selettore del Fondo e della Valuta -->
     <div class="row mt-2">
         <div class="col-md-6 offset-md-3">
-            <form method="get" class="d-flex justify-content-center">
-                <div class="form-group me-3">
-                    <label for="fundSelector">Select Fund:</label>
-                    <select id="fundSelector" name="fund" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Select Fund --</option>
-                        {% for fund in funds %}
-                            <option value="{{ fund.id }}" {% if fund == selected_fund %}selected{% endif %}>{{ fund.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="currencySelector">Select Currency:</label>
-                    <select id="currencySelector" name="currency" class="form-control" onchange="this.form.submit()">
-                        <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>USD</option>
-                        <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>EUR</option>
-                    </select>
-                </div>
-            </form>
+            <div class="d-flex justify-content-center align-items-end">
+                <form method="get" class="d-flex flex-column me-3">
+                    <div class="form-group">
+                        <label for="fundSelector">Select Fund:</label>
+                        <select id="fundSelector" name="fund" class="form-control" onchange="this.form.submit()">
+                            <option value="">-- Select Fund --</option>
+                            {% for fund in funds %}
+                                <option value="{{ fund.id }}" {% if fund == selected_fund %}selected{% endif %}>{{ fund.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                <form method="get" class="d-flex flex-column me-3">
+                    <div class="form-group">
+                        <label for="currencySelector">Select Currency:</label>
+                        <select id="currencySelector" name="currency" class="form-control" onchange="this.form.submit()">
+                            <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>USD</option>
+                            <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                        </select>
+                    </div>
+                </form>
+                <form method="post" action="{% url 'save_report' %}" class="d-flex align-items-end">
+                    {% csrf_token %}
+                    <input type="hidden" name="fund_id" value="{{ selected_fund.id }}">
+                    <input type="hidden" name="currency" value="{{ selected_currency }}">
+                    <button type="submit" class="btn btn-primary">Save Report</button>
+                </form>
+            </div>
         </div>
-    </div>
+    </div>    
     
     <!-- Performance del Fondo -->
     {% if selected_fund %}

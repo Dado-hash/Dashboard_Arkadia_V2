@@ -1,14 +1,20 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 import json
+import os
 from django.shortcuts import get_object_or_404, render, redirect
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.contrib import messages
 import requests
 from services.update_assets import update_all_assets
-from .models import Asset, Balance, ExchangeRate, Fund, PerformanceMetric, Strategy, Transaction
+from .models import Asset, Balance, ExchangeRate, Fund, PerformanceMetric, SavedReport, Strategy, Transaction
 from .forms import AssetFormSet, ExchangeAccountForm, FundForm, StrategyForm, TransactionFormSet, WalletForm
 from django.db.models import Sum, Max
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import inch
 
 # Create your views here.
 
@@ -391,3 +397,157 @@ def get_css_class_for_metric(metric, currency):
         return 'text-success' if value >= 0 else 'text-danger'
     return ''
 
+def all_reports(request):
+    reports = SavedReport.objects.all().order_by('date')
+    context = {
+        'reports': reports,
+    }
+    return render(request, 'funds_and_strategies/all_reports.html', context)
+
+def save_report(request):
+    if request.method == 'POST':
+        fund_id = request.POST.get('fund_id')
+        selected_currency = request.POST.get('currency')
+        selected_fund = Fund.objects.get(id=fund_id)
+
+        # Raccogliere i dati di performance del fondo e delle strategie
+        fund_performance = {
+            'ytd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="annual_performance").last(),
+            'mtd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="monthly_performance").last(),
+            'wtd': PerformanceMetric.objects.filter(fund=selected_fund, metric_name="weekly_performance").last(),
+            'latest_balance': Balance.objects.filter(fund=selected_fund).order_by('-date').first(),
+        }
+
+        strategies = Strategy.objects.filter(fund=selected_fund)
+        strategy_performance = []
+        for strategy in strategies:
+            strategy_performance.append({
+                'strategy': strategy,
+                'ytd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="annual_performance").last(),
+                'mtd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="monthly_performance").last(),
+                'wtd': PerformanceMetric.objects.filter(strategy=strategy, metric_name="weekly_performance").last(),
+                'latest_balance': Balance.objects.filter(strategy=strategy).order_by('-date').first(),
+            })
+
+        report_name = f"{selected_fund.name} Report {datetime.now().strftime('%B %Y')} ({selected_currency})"
+
+        existing_report = SavedReport.objects.filter(name=report_name).first()
+        if existing_report:
+            if os.path.exists(existing_report.file_path):
+                os.remove(existing_report.file_path)
+            existing_report.delete()
+
+        file_name = create_pdf_report(selected_fund, selected_currency, fund_performance, strategy_performance)
+
+        saved_report = SavedReport.objects.create(
+            name=f"{selected_fund.name} Report {datetime.now().strftime('%B %Y')} ({selected_currency})",
+            file_path=file_name,
+            date=datetime.now(),
+            fund=selected_fund,
+            currency=selected_currency
+        )
+
+        return redirect('reports')
+
+def create_pdf_report(fund, currency, fund_performance, strategy_performance):
+    # Definisci il nome del file
+    file_name = f"{fund.name}_{currency}_Report_{datetime.now().strftime('%Y_%m_%d')}.pdf"
+
+    # Crea il documento PDF
+    pdf = SimpleDocTemplate(file_name, pagesize=A4)
+    elements = []
+
+    # Aggiungi il titolo
+    styles = getSampleStyleSheet()
+    title = Paragraph(f"Performance Report for {fund.name}", styles['Title'])
+    elements.append(title)
+
+    # Aggiungi una tabella con le performance del fondo
+    data = [
+        ['Performance Type', f'Value ({currency})'],
+        ['YTD', f"{fund_performance['ytd'].value if fund_performance['ytd'] else 0 if currency == 'USD' else fund_performance['ytd'].value_eur if fund_performance['ytd'] else 0}%"],
+        ['MTD', f"{fund_performance['mtd'].value if fund_performance['mtd'] else 0 if currency == 'USD' else fund_performance['mtd'].value_eur if fund_performance['mtd'] else 0}%"],
+        ['WTD', f"{fund_performance['wtd'].value if fund_performance['wtd'] else 0 if currency == 'USD' else fund_performance['wtd'].value_eur if fund_performance['wtd'] else 0}%"],
+        ['Latest Balance', f"{fund_performance['latest_balance'].value_usd if fund_performance['latest_balance'] else 0 if currency == 'USD' else fund_performance['latest_balance'].value_eur if fund_performance['latest_balance'] else 0}"]
+    ]
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(table)
+
+    # Aggiungi spazio tra le tabelle
+    elements.append(Spacer(1, 12))
+
+    # Aggiungi una tabella con le performance delle strategie
+    strategy_data = [['Strategy', 'YTD', 'MTD', 'WTD', f'Latest Balance ({currency})']]
+    for sp in strategy_performance:
+        ytd_value = sp['ytd'].value if sp['ytd'] else 0 if currency == 'USD' else sp['ytd'].value_eur if sp['ytd'] else 0
+        mtd_value = sp['mtd'].value if sp['mtd'] else 0 if currency == 'USD' else sp['mtd'].value_eur if sp['mtd'] else 0
+        wtd_value = sp['wtd'].value if sp['wtd'] else 0 if currency == 'USD' else sp['wtd'].value_eur if sp['wtd'] else 0
+        latest_balance_value = sp['latest_balance'].value_usd if sp['latest_balance'] else 0 if currency == 'USD' else sp['latest_balance'].value_eur if sp['latest_balance'] else 0
+
+        strategy_data.append([
+            sp['strategy'].name,
+            f"{ytd_value}%",
+            f"{mtd_value}%",
+            f"{wtd_value}%",
+            f"{latest_balance_value}"
+        ])
+
+    strategy_table = Table(strategy_data)
+    strategy_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(strategy_table)
+
+    # Aggiungi spazio tra le tabelle
+    elements.append(Spacer(1, 12))
+
+    # Calcola i pesi percentuali delle strategie
+    total_balance = sum(sp['latest_balance'].value_usd if sp['latest_balance'] else 0 if currency == 'USD' else sp['latest_balance'].value_eur if sp['latest_balance'] else 0 for sp in strategy_performance)
+    weight_data = [['Strategy', f'Weight (%)']]
+    for sp in strategy_performance:
+        latest_balance_value = sp['latest_balance'].value_usd if sp['latest_balance'] else 0 if currency == 'USD' else sp['latest_balance'].value_eur if sp['latest_balance'] else 0
+        weight_percentage = (latest_balance_value / total_balance * 100) if total_balance != 0 else 0
+        weight_data.append([sp['strategy'].name, f"{weight_percentage:.2f}%"])
+
+    weight_table = Table(weight_data)
+    weight_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(weight_table)
+
+    # Costruisci il PDF
+    pdf.build(elements)
+
+    return file_name
+
+def download_report(request, report_id):
+    try:
+        report = SavedReport.objects.get(id=report_id)
+        file_path = report.file_path
+        response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{report.name}.pdf"'
+        return response
+    except SavedReport.DoesNotExist:
+        raise Http404("Report not found")

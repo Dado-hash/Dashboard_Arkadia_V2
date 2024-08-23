@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from cryptography.fernet import Fernet
 from django.forms import ValidationError 
+from django.utils import timezone
 
 class Fund(models.Model):
     name = models.CharField(max_length=255)
@@ -158,3 +159,13 @@ class ExchangeRate(models.Model):
 
     def __str__(self):
         return f"{self.from_currency}/{self.to_currency} - {self.date}: {self.rate}"
+
+class SavedReport(models.Model):
+    name = models.CharField(max_length=255)
+    file_path = models.CharField(max_length=255)
+    date = models.DateTimeField(auto_now_add=True)
+    fund = models.ForeignKey(Fund, on_delete=models.CASCADE)
+    currency = models.CharField(max_length=3)  
+
+    def __str__(self):
+        return self.name
