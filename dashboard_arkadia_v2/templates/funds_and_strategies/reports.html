@@ -44,7 +44,7 @@
                 <tbody>
                     <tr>
                         <td>YTD</td>
-                        <td class="{% if selected_currency == 'USD' and fund_performance.ytd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.ytd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ fund_performance.ytd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ fund_performance.ytd.value|default:"N/A" }}%
                             {% else %}
@@ -54,7 +54,7 @@
                     </tr>
                     <tr>
                         <td>MTD</td>
-                        <td class="{% if selected_currency == 'USD' and fund_performance.mtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.mtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ fund_performance.mtd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ fund_performance.mtd.value|default:"N/A" }}%
                             {% else %}
@@ -64,7 +64,7 @@
                     </tr>
                     <tr>
                         <td>WTD</td>
-                        <td class="{% if selected_currency == 'USD' and fund_performance.wtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and fund_performance.wtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ fund_performance.wtd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ fund_performance.wtd.value|default:"N/A" }}%
                             {% else %}
@@ -104,21 +104,21 @@
                     {% for sp in strategy_performance %}
                     <tr>
                         <td>{{ sp.strategy.name }}</td>
-                        <td class="{% if selected_currency == 'USD' and sp.ytd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.ytd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ sp.ytd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ sp.ytd.value|default:"N/A" }}%
                             {% else %}
                                 {{ sp.ytd.value_eur|default:"N/A" }}%
                             {% endif %}
                         </td>
-                        <td class="{% if selected_currency == 'USD' and sp.mtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.mtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ sp.mtd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ sp.mtd.value|default:"N/A" }}%
                             {% else %}
                                 {{ sp.mtd.value_eur|default:"N/A" }}%
                             {% endif %}
                         </td>
-                        <td class="{% if selected_currency == 'USD' and sp.wtd.value >= 0 %}text-success{% elif selected_currency == 'EUR' and sp.wtd.value_eur >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <td class="{{ sp.wtd_class }}">
                             {% if selected_currency == 'USD' %}
                                 {{ sp.wtd.value|default:"N/A" }}%
                             {% else %}
@@ -132,6 +132,31 @@
                                 {{ sp.latest_balance.value_eur|default:"N/A" }}
                             {% endif %}
                         </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Peso Percentuale delle Strategie -->
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <h4>Strategy Weights</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Balance ({{ selected_currency }})</th>
+                        <th>Weight (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sw in strategy_weights %}
+                    <tr>
+                        <td>{{ sw.strategy }}</td>
+                        <td>{{ sw.balance|floatformat:2 }}</td>
+                        <td>{{ sw.weight|floatformat:2 }}%</td>
                     </tr>
                     {% endfor %}
                 </tbody>

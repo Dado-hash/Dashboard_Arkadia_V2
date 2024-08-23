@@ -326,6 +326,9 @@ def reports(request):
     selected_fund = Fund.objects.get(id=selected_fund_id) if selected_fund_id else None
 
     fund_performance = {}
+    strategy_performance = []
+    strategy_weights = []
+
     if selected_fund:
         ytd = PerformanceMetric.objects.filter(fund=selected_fund, metric_name="annual_performance").last()
         mtd = PerformanceMetric.objects.filter(fund=selected_fund, metric_name="monthly_performance").last()
@@ -342,25 +345,34 @@ def reports(request):
             'wtd_class': get_css_class_for_metric(wtd, selected_currency),
         }
 
-    strategy_performance = []
-    if selected_fund:
         strategies = Strategy.objects.filter(fund=selected_fund)
+        total_balance = latest_balance.value_usd if selected_currency == 'USD' else latest_balance.value_eur
+
         for strategy in strategies:
             ytd = PerformanceMetric.objects.filter(strategy=strategy, metric_name="annual_performance").last()
             mtd = PerformanceMetric.objects.filter(strategy=strategy, metric_name="monthly_performance").last()
             wtd = PerformanceMetric.objects.filter(strategy=strategy, metric_name="weekly_performance").last()
-            latest_balance = Balance.objects.filter(strategy=strategy).order_by('-date').first()
+            latest_strategy_balance = Balance.objects.filter(strategy=strategy).order_by('-date').first()
 
             strategy_performance.append({
                 'strategy': strategy,
                 'ytd': ytd,
                 'mtd': mtd,
                 'wtd': wtd,
-                'latest_balance': latest_balance,
+                'latest_balance': latest_strategy_balance,
                 'ytd_class': get_css_class_for_metric(ytd, selected_currency),
                 'mtd_class': get_css_class_for_metric(mtd, selected_currency),
                 'wtd_class': get_css_class_for_metric(wtd, selected_currency),
             })
+
+            if latest_strategy_balance:
+                strategy_balance = latest_strategy_balance.value_usd if selected_currency == 'USD' else latest_strategy_balance.value_eur
+                strategy_weight = (strategy_balance / total_balance) * 100 if total_balance > 0 else 0
+                strategy_weights.append({
+                    'strategy': strategy.name,
+                    'balance': strategy_balance,
+                    'weight': strategy_weight,
+                })
 
     context = {
         'funds': funds,
@@ -368,6 +380,7 @@ def reports(request):
         'selected_currency': selected_currency,
         'fund_performance': fund_performance,
         'strategy_performance': strategy_performance,
+        'strategy_weights': strategy_weights,
     }
 
     return render(request, 'funds_and_strategies/reports.html', context)
