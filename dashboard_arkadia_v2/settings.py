@@ -88,9 +88,9 @@ DATABASES = {
     'default': dj_database_url.config(conn_max_age=600)
 }
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')
 
-ETHERSCAN_API_KEY = os.environ.get('ETHERSCAN_API_KEY')
+ETHERSCAN_API_KEY = env('ETHERSCAN_API_KEY')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
