@@ -85,7 +85,9 @@ WSGI_APPLICATION = 'dashboard_arkadia_v2.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600)
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL')
+    )
 }
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
