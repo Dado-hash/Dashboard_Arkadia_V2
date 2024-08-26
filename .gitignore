@@ -13,9 +13,6 @@ __pycache__/
 *.sqlite3
 *.sql
 
-# Django migrations
-**/migrations/*
-
 # If you are using MySQL, MariaDB or PostgreSQL:
 *.sql
 
