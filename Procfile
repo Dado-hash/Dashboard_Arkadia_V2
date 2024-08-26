@@ -1,1 +1,1 @@
-web : gunicorn dashboard_arkadia_v2.wsgi
+web: gunicorn dashboard_arkadia_v2.wsgi
